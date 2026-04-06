@@ -1,5 +1,3 @@
 {
-  "buildCommand": "cd payvault-ui && npm run build",
-  "outputDirectory": "payvault-ui/build",
-  "installCommand": "cd payvault-ui && npm install"
+  "rootDirectory": "payvault-ui"
 }
