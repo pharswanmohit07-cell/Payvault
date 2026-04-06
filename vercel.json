@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd payvault-ui && npm run build",
+  "outputDirectory": "payvault-ui/build",
+  "installCommand": "npm install"
+}
