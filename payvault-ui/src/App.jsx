@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 // ─── API base ──────────────────────────────────────────────────────────────────
-const API = "http://localhost:8000/api";
+const API = import.meta.env.VITE_API_URL ?? "https://payvault-32xz.onrender.com/api";
 
 async function apiFetch(path, options = {}, token = null) {
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
