@@ -78,9 +78,9 @@ Copy `PayVault.jsx` → `src/App.jsx` (replace existing content).
 
 Other demo accounts available:
 - priya@payvault.com
-- rahul@payvault.com
+- teena@payvault.com
 - sneha@payvault.com
-- arjun@payvault.com
+- akankshya@payvault.com
 (All with password: demo1234)
 
 ---

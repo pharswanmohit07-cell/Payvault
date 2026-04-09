@@ -64,16 +64,16 @@ USERS_DB["priya@payvault.com"] = {
     "joined": "2023-09-20",
 }
 
-_rahul_id = "demo-user-003"
-USERS_DB["rahul@payvault.com"] = {
-    "id": _rahul_id,
-    "name": "Rahul Mehta",
-    "email": "rahul@payvault.com",
+_teena_id = "demo-user-003"
+USERS_DB["teena@payvault.com"] = {
+    "id": _teena_id,
+    "name": "Teena",
+    "email": "teena@payvault.com",
     "hashed_password": pwd_context.hash("demo1234"),
     "balance": 95000.00,
     "avatar": "RM",
     "phone": "+91 98765 43212",
-    "upi_id": "rahul@payvault",
+    "upi_id": "teena@payvault",
     "joined": "2023-10-05",
 }
 
@@ -90,16 +90,16 @@ USERS_DB["sneha@payvault.com"] = {
     "joined": "2023-11-10",
 }
 
-_arjun_id = "demo-user-005"
-USERS_DB["arjun@payvault.com"] = {
-    "id": _arjun_id,
-    "name": "Arjun Nair",
-    "email": "arjun@payvault.com",
+_akankshya_id = "demo-user-005"
+USERS_DB["akankshya@payvault.com"] = {
+    "id": _akankshya_id,
+    "name": "Akankshya Joshi",
+    "email": "akankshya@payvault.com",
     "hashed_password": pwd_context.hash("demo1234"),
     "balance": 80000.00,
     "avatar": "AN",
     "phone": "+91 98765 43214",
-    "upi_id": "arjun@payvault",
+    "upi_id": "akankshya@payvault",
     "joined": "2023-12-15",
 }
 TRANSACTIONS_DB[_demo_id] = [
@@ -114,9 +114,9 @@ TRANSACTIONS_DB[_demo_id] = [
 ]
 CONTACTS_DB[_demo_id] = [
     {"id": "c1", "name": "Priya Sharma",  "upi": "priya@payvault",  "avatar": "PS", "color": "#6366f1"},
-    {"id": "c2", "name": "Rahul Mehta",   "upi": "rahul@payvault",  "avatar": "RM", "color": "#f59e0b"},
+    {"id": "c2", "name": "Teena",   "upi": "teena@payvault",  "avatar": "RM", "color": "#f59e0b"},
     {"id": "c3", "name": "Sneha Kapoor",  "upi": "sneha@payvault",  "avatar": "SK", "color": "#10b981"},
-    {"id": "c4", "name": "Arjun Nair",    "upi": "arjun@payvault",  "avatar": "AN", "color": "#ef4444"},
+    {"id": "c4", "name": "Akankshya",    "upi": "akankshya@payvault",  "avatar": "AN", "color": "#ef4444"},
 ]
 
 # Transactions for Priya
@@ -129,17 +129,17 @@ TRANSACTIONS_DB[_priya_id] = [
 
 CONTACTS_DB[_priya_id] = [
     {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "AJ", "color": "#6366f1"},
-    {"id": "c2", "name": "Rahul Mehta",   "upi": "rahul@payvault", "avatar": "RM", "color": "#f59e0b"},
+    {"id": "c2", "name": "Teena",   "upi": "Teena@payvault", "avatar": "RM", "color": "#f59e0b"},
 ]
 
-# Transactions for Rahul
-TRANSACTIONS_DB[_rahul_id] = [
+# Transactions for Teena
+TRANSACTIONS_DB[_Teena_id] = [
     {"id": "r1", "type": "credit", "category": "Income",     "description": "Salary — April",     "amount": 70000, "to_from": "Company",      "date": "2024-04-01", "status": "completed"},
     {"id": "r2", "type": "debit",  "category": "Transport",  "description": "Fuel",              "amount": 2000,  "to_from": "Petrol Pump",  "date": "2024-04-05", "status": "completed"},
     {"id": "r3", "type": "debit",  "category": "Entertainment","description": "Movie Tickets",   "amount": 600,   "to_from": "PVR",          "date": "2024-04-04", "status": "completed"},
 ]
 
-CONTACTS_DB[_rahul_id] = [
+CONTACTS_DB[_Teena_id] = [
     {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "AJ", "color": "#6366f1"},
     {"id": "c2", "name": "Priya Sharma",  "upi": "priya@payvault", "avatar": "PS", "color": "#10b981"},
 ]
@@ -154,13 +154,13 @@ CONTACTS_DB[_sneha_id] = [
     {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "AJ", "color": "#6366f1"},
 ]
 
-# Transactions for Arjun
-TRANSACTIONS_DB[_arjun_id] = [
+# Transactions for akankshya
+TRANSACTIONS_DB[_akankshya_id] = [
     {"id": "a1", "type": "credit", "category": "Income",     "description": "Consulting Fee",     "amount": 40000, "to_from": "Client",       "date": "2024-04-01", "status": "completed"},
     {"id": "a2", "type": "debit",  "category": "Health",     "description": "Doctor Visit",       "amount": 1500,  "to_from": "Hospital",     "date": "2024-04-05", "status": "completed"},
 ]
 
-CONTACTS_DB[_arjun_id] = [
+CONTACTS_DB[_akankshya_id] = [
     {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "AJ", "color": "#6366f1"},
 ]
 
