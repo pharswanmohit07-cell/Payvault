@@ -1,15 +1,6 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "payvault-ui/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/payvault-ui/dist/$1" }
-  ]
+  "buildCommand": "cd payvault-ui && npm install && npm run build",
+  "outputDirectory": "payvault-ui/dist",
+  "installCommand": "echo skip",
+  "framework": null
 }
