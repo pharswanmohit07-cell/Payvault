@@ -712,7 +712,7 @@ function PaymentLimitModal({ paymentLimit, onSave, onClose, T }) {
 
 // ─── Transaction Row ───────────────────────────────────────────────────────────
 function TxnRow({ t, hideBalance, onDelete, showDelete, T }) {
-  const meta = CAT_META[t.category] || { icon: "📦", color: "#6b7280" };
+  const meta = CAT_META[t.category] || { icon: Package, color: "#6b7280" };
   const isCredit = t.type === "credit";
   const [hov, setHov] = useState(false);
 
@@ -1151,7 +1151,7 @@ export default function PayVault() {
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                       {categoryAnalytics.map(([cat, amt]) => {
                         const pct = analytics.total_spent > 0 ? (amt / analytics.total_spent * 100) : 0;
-                        const meta = CAT_META[cat] || { icon: "📦", color: "#6b7280" };
+                        const meta = CAT_META[cat] || { icon: Package, color: "#6b7280" };
                         return (
                           <div key={cat}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
@@ -1184,11 +1184,13 @@ export default function PayVault() {
                     </div>
                     <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
                       {categoryAnalytics.map(([cat, amt]) => {
-                        const meta = CAT_META[cat] || { icon: "📦", color: "#6b7280" };
+                        const meta = CAT_META[cat] || { icon: Package, color: "#6b7280" };
                         return (
                           <div key={cat} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "9px 12px", borderRadius: 12, background: T.statBg, border: `1px solid ${T.border}` }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <span style={{ width: 8, height: 8, borderRadius: "50%", background: meta.color, flexShrink: 0 }} />
+                              <span style={{ width: 26, height: 26, borderRadius: 7, background: meta.color + "18", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                <meta.icon size={13} color={meta.color} />
+                              </span>
                               <span style={{ fontSize: 13, color: T.text, fontWeight: 600 }}>{cat}</span>
                             </div>
                             <span style={{ fontSize: 13, color: meta.color, fontWeight: 700 }}>{hideBalance ? "•••" : fmt(amt)}</span>
@@ -1205,11 +1207,13 @@ export default function PayVault() {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 14 }}>
                     {categoryAnalytics.map(([cat, amt]) => {
                       const pct = analytics.total_spent > 0 ? (amt / analytics.total_spent * 100) : 0;
-                      const meta = CAT_META[cat] || { color: "#6b7280" };
+                      const meta = CAT_META[cat] || { icon: Package, color: "#6b7280" };
                       return (
                         <div key={cat} style={{ display: "flex", flexDirection: "column", gap: 12, padding: 14, borderRadius: 16, background: T.statBg, border: `1px solid ${T.border}` }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span style={{ fontSize: 13, color: T.text }}>{cat}</span>
+                            <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: T.text }}>
+                              <meta.icon size={13} color={meta.color} />{cat}
+                            </span>
                             <span style={{ fontSize: 13, color: meta.color, fontWeight: 700 }}>{hideBalance ? "•••" : fmt(amt)}</span>
                           </div>
                           <div style={{ height: 120, borderRadius: 16, background: T.cardAccent, padding: 10, display: "flex", alignItems: "flex-end" }}>
