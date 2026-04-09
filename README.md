@@ -73,7 +73,7 @@ Copy `PayVault.jsx` → `src/App.jsx` (replace existing content).
 
 | Field    | Value               |
 |----------|---------------------|
-| Email    | alex@payvault.com   |
+| Email    | rohit@payvault.com   |
 | Password | demo1234            |
 
 Other demo accounts available:

@@ -39,15 +39,15 @@ CONTACTS_DB: dict = {}       # keyed by user_id
 
 # Seed demo users
 _demo_id = "demo-user-001"
-USERS_DB["alex@payvault.com"] = {
+USERS_DB["rohit@payvault.com"] = {
     "id": _demo_id,
-    "name": "Alex Johnson",
-    "email": "alex@payvault.com",
+    "name": "Rohit Singh",
+    "email": "rohit@payvault.com",
     "hashed_password": pwd_context.hash("demo1234"),
     "balance": 124500.00,
     "avatar": "AJ",
     "phone": "+91 98765 43210",
-    "upi_id": "alex@payvault",
+    "upi_id": "rohit@payvault",
     "joined": "2023-08-15",
 }
 
@@ -124,11 +124,11 @@ TRANSACTIONS_DB[_priya_id] = [
     {"id": "p1", "type": "credit", "category": "Income",     "description": "Freelance Payment", "amount": 25000, "to_from": "Client",       "date": "2024-04-01", "status": "completed"},
     {"id": "p2", "type": "debit",  "category": "Food",       "description": "Restaurant Bill",   "amount": 800,   "to_from": "Dominos",      "date": "2024-04-05", "status": "completed"},
     {"id": "p3", "type": "debit",  "category": "Shopping",   "description": "Clothes Shopping",  "amount": 5000,  "to_from": "Myntra",       "date": "2024-04-04", "status": "completed"},
-    {"id": "p4", "type": "debit",  "category": "Transfer",   "description": "Payment to Alex",   "amount": 5000,  "to_from": "Alex Johnson", "date": "2024-04-02", "status": "completed"},
+    {"id": "p4", "type": "debit",  "category": "Transfer",   "description": "Payment to Rohit",   "amount": 5000,  "to_from": "Rohit Singh", "date": "2024-04-02", "status": "completed"},
 ]
 
 CONTACTS_DB[_priya_id] = [
-    {"id": "c1", "name": "Alex Johnson",  "upi": "alex@payvault",  "avatar": "AJ", "color": "#6366f1"},
+    {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "AJ", "color": "#6366f1"},
     {"id": "c2", "name": "Rahul Mehta",   "upi": "rahul@payvault", "avatar": "RM", "color": "#f59e0b"},
 ]
 
@@ -140,7 +140,7 @@ TRANSACTIONS_DB[_rahul_id] = [
 ]
 
 CONTACTS_DB[_rahul_id] = [
-    {"id": "c1", "name": "Alex Johnson",  "upi": "alex@payvault",  "avatar": "AJ", "color": "#6366f1"},
+    {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "AJ", "color": "#6366f1"},
     {"id": "c2", "name": "Priya Sharma",  "upi": "priya@payvault", "avatar": "PS", "color": "#10b981"},
 ]
 
@@ -151,7 +151,7 @@ TRANSACTIONS_DB[_sneha_id] = [
 ]
 
 CONTACTS_DB[_sneha_id] = [
-    {"id": "c1", "name": "Alex Johnson",  "upi": "alex@payvault",  "avatar": "AJ", "color": "#6366f1"},
+    {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "AJ", "color": "#6366f1"},
 ]
 
 # Transactions for Arjun
@@ -161,7 +161,7 @@ TRANSACTIONS_DB[_arjun_id] = [
 ]
 
 CONTACTS_DB[_arjun_id] = [
-    {"id": "c1", "name": "Alex Johnson",  "upi": "alex@payvault",  "avatar": "AJ", "color": "#6366f1"},
+    {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "AJ", "color": "#6366f1"},
 ]
 
 # ─── Schemas ───────────────────────────────────────────────────────────────────
