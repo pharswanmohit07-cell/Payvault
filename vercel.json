@@ -1,1 +1,5 @@
-{}
+{
+  "buildCommand": "cd payvault-ui && npm install && npm run build",
+  "outputDirectory": "payvault-ui/build",
+  "installCommand": "echo skip"
+}
