@@ -45,7 +45,7 @@ USERS_DB["rohit@payvault.com"] = {
     "email": "rohit@payvault.com",
     "hashed_password": pwd_context.hash("demo1234"),
     "balance": 124500.00,
-    "avatar": "AJ",
+    "avatar": "RS",
     "phone": "+91 98765 43210",
     "upi_id": "rohit@payvault",
     "joined": "2023-08-15",
@@ -71,7 +71,7 @@ USERS_DB["teena@payvault.com"] = {
     "email": "teena@payvault.com",
     "hashed_password": pwd_context.hash("demo1234"),
     "balance": 95000.00,
-    "avatar": "RM",
+    "avatar": "T",
     "phone": "+91 98765 43212",
     "upi_id": "teena@payvault",
     "joined": "2023-10-05",
@@ -97,7 +97,7 @@ USERS_DB["akankshya@payvault.com"] = {
     "email": "akankshya@payvault.com",
     "hashed_password": pwd_context.hash("demo1234"),
     "balance": 80000.00,
-    "avatar": "AN",
+    "avatar": "AJ",
     "phone": "+91 98765 43214",
     "upi_id": "akankshya@payvault",
     "joined": "2023-12-15",
@@ -114,9 +114,9 @@ TRANSACTIONS_DB[_demo_id] = [
 ]
 CONTACTS_DB[_demo_id] = [
     {"id": "c1", "name": "Priya Sharma",  "upi": "priya@payvault",  "avatar": "PS", "color": "#6366f1"},
-    {"id": "c2", "name": "Teena",   "upi": "teena@payvault",  "avatar": "RM", "color": "#f59e0b"},
+    {"id": "c2", "name": "Teena",   "upi": "teena@payvault",  "avatar": "T", "color": "#f59e0b"},
     {"id": "c3", "name": "Sneha Kapoor",  "upi": "sneha@payvault",  "avatar": "SK", "color": "#10b981"},
-    {"id": "c4", "name": "Akankshya",    "upi": "akankshya@payvault",  "avatar": "AN", "color": "#ef4444"},
+    {"id": "c4", "name": "Akankshya",    "upi": "akankshya@payvault",  "avatar": "AJ", "color": "#ef4444"},
 ]
 
 # Transactions for Priya
@@ -128,19 +128,19 @@ TRANSACTIONS_DB[_priya_id] = [
 ]
 
 CONTACTS_DB[_priya_id] = [
-    {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "AJ", "color": "#6366f1"},
-    {"id": "c2", "name": "Teena",   "upi": "Teena@payvault", "avatar": "RM", "color": "#f59e0b"},
+    {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "RS", "color": "#6366f1"},
+    {"id": "c2", "name": "Teena",   "upi": "teena@payvault", "avatar": "T", "color": "#f59e0b"},
 ]
 
 # Transactions for Teena
-TRANSACTIONS_DB[_Teena_id] = [
+TRANSACTIONS_DB[_teena_id] = [
     {"id": "r1", "type": "credit", "category": "Income",     "description": "Salary — April",     "amount": 70000, "to_from": "Company",      "date": "2024-04-01", "status": "completed"},
     {"id": "r2", "type": "debit",  "category": "Transport",  "description": "Fuel",              "amount": 2000,  "to_from": "Petrol Pump",  "date": "2024-04-05", "status": "completed"},
     {"id": "r3", "type": "debit",  "category": "Entertainment","description": "Movie Tickets",   "amount": 600,   "to_from": "PVR",          "date": "2024-04-04", "status": "completed"},
 ]
 
-CONTACTS_DB[_Teena_id] = [
-    {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "AJ", "color": "#6366f1"},
+CONTACTS_DB[_teena_id] = [
+    {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "RS", "color": "#6366f1"},
     {"id": "c2", "name": "Priya Sharma",  "upi": "priya@payvault", "avatar": "PS", "color": "#10b981"},
 ]
 
@@ -151,7 +151,7 @@ TRANSACTIONS_DB[_sneha_id] = [
 ]
 
 CONTACTS_DB[_sneha_id] = [
-    {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "AJ", "color": "#6366f1"},
+    {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "RS", "color": "#6366f1"},
 ]
 
 # Transactions for akankshya
@@ -161,7 +161,7 @@ TRANSACTIONS_DB[_akankshya_id] = [
 ]
 
 CONTACTS_DB[_akankshya_id] = [
-    {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "AJ", "color": "#6366f1"},
+    {"id": "c1", "name": "Rohit Singh",  "upi": "rohit@payvault",  "avatar": "RS", "color": "#6366f1"},
 ]
 
 # ─── Schemas ───────────────────────────────────────────────────────────────────
