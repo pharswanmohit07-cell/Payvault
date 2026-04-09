@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd payvault-ui && npm install --legacy-peer-deps && npm run build",
-  "outputDirectory": "payvault-ui/build",
+  "buildCommand": "cd payvault-ui && npm install && npm run build",
+  "outputDirectory": "payvault-ui/dist",
   "installCommand": "echo skip"
 }
