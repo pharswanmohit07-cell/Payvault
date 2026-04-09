@@ -13,7 +13,9 @@ import {
   ChevronRight, Search, CheckCircle2, AlertCircle,
   CreditCard, BarChart3, Bell, RefreshCw, Shield,
   Copy, Check, ArrowLeft, Moon, Sun, Menu, TriangleAlert,
-  SlidersHorizontal,
+  SlidersHorizontal, Utensils, Car, Gamepad2, Zap, HeartPulse,
+  ShoppingBag, ArrowLeftRight, Banknote, Package, TrendingUp, TrendingDown,
+  UserCircle, Phone, CalendarDays, Landmark, Lock, Fingerprint,
 } from "lucide-react";
 
 // ─── API ───────────────────────────────────────────────────────────────────────
@@ -32,15 +34,15 @@ async function apiFetch(path, options = {}, token = null) {
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 const CAT_META = {
-  Food:          { icon: "🍜", color: "#f97316" },
-  Transport:     { icon: "🚗", color: "#06b6d4" },
-  Entertainment: { icon: "🎮", color: "#a855f7" },
-  Utilities:     { icon: "💡", color: "#10b981" },
-  Health:        { icon: "🏥", color: "#ec4899" },
-  Shopping:      { icon: "🛍️", color: "#f59e0b" },
-  Transfer:      { icon: "↔️", color: "#6366f1" },
-  Income:        { icon: "💰", color: "#22c55e" },
-  Other:         { icon: "📦", color: "#6b7280" },
+  Food:          { icon: Utensils,      color: "#f97316" },
+  Transport:     { icon: Car,           color: "#06b6d4" },
+  Entertainment: { icon: Gamepad2,      color: "#a855f7" },
+  Utilities:     { icon: Zap,           color: "#10b981" },
+  Health:        { icon: HeartPulse,    color: "#ec4899" },
+  Shopping:      { icon: ShoppingBag,   color: "#f59e0b" },
+  Transfer:      { icon: ArrowLeftRight,color: "#6366f1" },
+  Income:        { icon: Banknote,      color: "#22c55e" },
+  Other:         { icon: Package,       color: "#6b7280" },
 };
 const CATEGORIES = Object.keys(CAT_META);
 const fmt = (n) => `₹${Number(n).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
@@ -717,7 +719,9 @@ function TxnRow({ t, hideBalance, onDelete, showDelete, T }) {
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 10px", borderRadius: 11, background: hov ? T.rowHover : "transparent", transition: "background .15s" }}>
-      <div style={{ width: 40, height: 40, borderRadius: 11, background: meta.color + "18", border: `1px solid ${meta.color}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>{meta.icon}</div>
+      <div style={{ width: 40, height: 40, borderRadius: 11, background: meta.color + "18", border: `1px solid ${meta.color}30`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <meta.icon size={18} color={meta.color} />
+      </div>
       <div style={{ flex: 1, overflow: "hidden" }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.description}</p>
         <p style={{ fontSize: 11, color: T.txnMeta, margin: 0 }}>{t.date} · {t.to_from} · <span style={{ color: meta.color }}>{t.category}</span></p>
@@ -1095,7 +1099,10 @@ export default function PayVault() {
 
                 <div className="filter-pills" style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
                   <FilterPill T={T} label="All" active={catFilter === "all"} onClick={() => setCatFilter("all")} />
-                  {CATEGORIES.map(c => <FilterPill key={c} T={T} label={`${CAT_META[c].icon} ${c}`} active={catFilter === c} onClick={() => setCatFilter(c)} color={CAT_META[c].color} />)}
+                  {CATEGORIES.map(c => {
+                    const Icon = CAT_META[c].icon;
+                    return <FilterPill key={c} T={T} label={<span style={{display:"flex",alignItems:"center",gap:5}}><Icon size={12}/>{c}</span>} active={catFilter === c} onClick={() => setCatFilter(c)} color={CAT_META[c].color} />;
+                  })}
                 </div>
 
                 <Card T={T} style={{ padding: 20 }}>
@@ -1149,7 +1156,9 @@ export default function PayVault() {
                           <div key={cat}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                                <span style={{ fontSize: 17 }}>{meta.icon}</span>
+                                <span style={{ width: 28, height: 28, borderRadius: 8, background: meta.color + "18", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                <meta.icon size={14} color={meta.color} />
+                              </span>
                                 <span style={{ fontSize: 14, fontWeight: 600, color: T.text }}>{cat}</span>
                               </div>
                               <div>
@@ -1238,9 +1247,9 @@ export default function PayVault() {
                       <p style={{ fontSize: 13, color: T.muted, margin: 0 }}>{user.email}</p>
                     </div>
                   </div>
-                  {[["UPI ID", wallet?.upi_id], ["Phone", user.phone || "—"], ["Member Since", user.joined]].map(([label, val]) => (
-                    <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: `1px solid ${T.border}` }}>
-                      <span style={{ fontSize: 13, color: T.muted }}>{label}</span>
+                  {[["UPI ID", wallet?.upi_id, Landmark], ["Phone", user.phone || "—", Phone], ["Member Since", user.joined, CalendarDays]].map(([label, val, Icon]) => (
+                    <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: `1px solid ${T.border}` }}>
+                      <span style={{ fontSize: 13, color: T.muted, display: "flex", alignItems: "center", gap: 7 }}><Icon size={13} />{label}</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{val}</span>
                     </div>
                   ))}
@@ -1276,11 +1285,11 @@ export default function PayVault() {
                 {/* Security toggles */}
                 <Card T={T} style={{ padding: 20 }}>
                   <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: T.text, marginBottom: 16 }}>Security</p>
-                  {[["Two-Factor Auth", false], ["Biometric Login", true], ["Transaction Alerts", true]].map(([label, defaultOn]) => {
+                  {[["Two-Factor Auth", false, Lock], ["Biometric Login", true, Fingerprint], ["Transaction Alerts", true, Bell]].map(([label, defaultOn, Icon]) => {
                     const [on, setOn] = useState(defaultOn);
                     return (
                       <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: `1px solid ${T.border}` }}>
-                        <span style={{ fontSize: 14, color: T.text }}>{label}</span>
+                        <span style={{ fontSize: 14, color: T.text, display: "flex", alignItems: "center", gap: 8 }}><Icon size={15} color={T.muted} />{label}</span>
                         <div onClick={() => setOn(p => !p)} style={{ width: 40, height: 22, borderRadius: 999, background: on ? "rgba(99,102,241,0.8)" : T.statBg, border: `1px solid ${on ? "rgba(99,102,241,0.4)" : T.border}`, position: "relative", cursor: "pointer", transition: "all .2s" }}>
                           <div style={{ width: 16, height: 16, borderRadius: "50%", background: "white", position: "absolute", top: 2, left: on ? 20 : 2, transition: "left .2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
                         </div>
