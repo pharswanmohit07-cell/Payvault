@@ -16,6 +16,8 @@ import {
   SlidersHorizontal, Utensils, Car, Gamepad2, Zap, HeartPulse,
   ShoppingBag, ArrowLeftRight, Banknote, Package, TrendingUp, TrendingDown,
   UserCircle, Phone, CalendarDays, Landmark, Lock, Fingerprint,
+  Download, Repeat, Split, Pencil, Target, Calendar, Clock,
+  TrendingUp as TrendUp, Flame, Star,
 } from "lucide-react";
 
 // ─── API ───────────────────────────────────────────────────────────────────────
@@ -629,7 +631,7 @@ function SendMoneyModal({ contacts, token, user, onClose, onSuccess, toast, T, p
 
 // ─── Add Expense Modal ────────────────────────────────────────────────────────
 function AddExpenseModal({ token, onClose, onSuccess, toast, T }) {
-  const [form, setForm] = useState({ description: "", amount: "", category: "Food", type: "debit", date: new Date().toISOString().split("T")[0] });
+  const [form, setForm] = useState({ description: "", amount: "", category: "Food", type: "debit", date: new Date().toISOString().split("T")[0], recurring: false });
   const [loading, setLoading] = useState(false);
   const set = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
 
@@ -668,6 +670,11 @@ function AddExpenseModal({ token, onClose, onSuccess, toast, T }) {
           {CATEGORIES.map(c => <option key={c}>{c}</option>)}
         </Select>
         <Input T={T} label="Date" type="date" value={form.date} onChange={set("date")} />
+        <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "10px 14px", borderRadius: 10, background: form.recurring ? T.navActive : T.statBg, border: `1px solid ${form.recurring ? T.heroBorder : T.border}`, transition: "all .2s" }}>
+          <input type="checkbox" checked={form.recurring} onChange={e => setForm(p => ({ ...p, recurring: e.target.checked }))} style={{ accentColor: "#6366f1" }} />
+          <Repeat size={14} color={form.recurring ? T.navActiveText : T.muted} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: form.recurring ? T.navActiveText : T.muted }}>Mark as recurring</span>
+        </label>
         <Btn T={T} variant="primary" loading={loading} style={{ width: "100%", justifyContent: "center" }} onClick={submit}>
           <Plus size={15} /> Add Transaction
         </Btn>
@@ -710,8 +717,133 @@ function PaymentLimitModal({ paymentLimit, onSave, onClose, T }) {
   );
 }
 
+// ─── Edit Transaction Modal ───────────────────────────────────────────────────
+function EditTxnModal({ txn, onClose, onSave, T }) {
+  const [form, setForm] = useState({ description: txn.description, category: txn.category });
+  const set = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
+  return (
+    <Modal onClose={onClose} title="Edit Transaction" T={T} width={380}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <Input T={T} label="Description" value={form.description} onChange={set("description")} />
+        <Select T={T} label="Category" value={form.category} onChange={set("category")}>
+          {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+        </Select>
+        <div style={{ display: "flex", gap: 10 }}>
+          <Btn T={T} variant="ghost" style={{ flex: 1, justifyContent: "center" }} onClick={onClose}>Cancel</Btn>
+          <Btn T={T} variant="primary" style={{ flex: 2, justifyContent: "center" }} onClick={() => { onSave(txn.id, form); onClose(); }}>
+            <Check size={14} /> Save Changes
+          </Btn>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ─── Budget Modal ──────────────────────────────────────────────────────────────
+function BudgetModal({ budgets, onSave, onClose, T, analytics }) {
+  const [vals, setVals] = useState({ ...budgets });
+  return (
+    <Modal onClose={onClose} title="Category Budgets" T={T} width={460}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <p style={{ fontSize: 13, color: T.textSub, margin: 0 }}>Set monthly spending limits per category. Leave blank to disable.</p>
+        {CATEGORIES.filter(c => c !== "Income").map(cat => {
+          const meta = CAT_META[cat];
+          const spent = analytics?.by_category?.[cat] || 0;
+          const budget = parseFloat(vals[cat]) || 0;
+          const pct = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
+          return (
+            <div key={cat} style={{ padding: "12px 14px", borderRadius: 12, background: T.statBg, border: `1px solid ${T.border}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: budget > 0 ? 10 : 0 }}>
+                <span style={{ width: 28, height: 28, borderRadius: 8, background: meta.color + "18", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <meta.icon size={14} color={meta.color} />
+                </span>
+                <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: T.text }}>{cat}</span>
+                <input
+                  type="number" placeholder="No limit"
+                  value={vals[cat] || ""}
+                  onChange={e => setVals(p => ({ ...p, [cat]: e.target.value }))}
+                  style={{ width: 100, padding: "6px 10px", borderRadius: 8, background: T.input, border: `1px solid ${T.inputBorder}`, color: T.text, fontSize: 13, fontFamily: "inherit", outline: "none", textAlign: "right" }}
+                />
+              </div>
+              {budget > 0 && (
+                <div>
+                  <div style={{ height: 5, borderRadius: 999, background: T.cardAccent, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, borderRadius: 999, background: pct > 90 ? "#ef4444" : pct > 70 ? "#f59e0b" : meta.color, transition: "width .5s" }} />
+                  </div>
+                  <p style={{ fontSize: 11, color: T.muted, marginTop: 4 }}>{fmt(spent)} of {fmt(budget)} spent</p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+          <Btn T={T} variant="ghost" style={{ flex: 1, justifyContent: "center" }} onClick={onClose}>Cancel</Btn>
+          <Btn T={T} variant="primary" style={{ flex: 2, justifyContent: "center" }} onClick={() => { onSave(vals); onClose(); }}>
+            <Check size={14} /> Save Budgets
+          </Btn>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ─── Split Bill Modal ──────────────────────────────────────────────────────────
+function SplitBillModal({ contacts, onClose, T }) {
+  const [desc, setDesc] = useState("");
+  const [total, setTotal] = useState("");
+  const [selected, setSelected] = useState([]);
+  const [includeMe, setIncludeMe] = useState(true);
+
+  const people = includeMe ? selected.length + 1 : selected.length;
+  const perPerson = people > 0 && total ? (parseFloat(total) / people).toFixed(2) : 0;
+
+  const toggle = id => setSelected(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+
+  return (
+    <Modal onClose={onClose} title="Split Bill" T={T} width={420}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <Input T={T} label="What's this for?" placeholder="Dinner, trip, etc." value={desc} onChange={e => setDesc(e.target.value)} />
+        <Input T={T} label="Total Amount (₹)" type="number" placeholder="0" value={total} onChange={e => setTotal(e.target.value)} />
+        <div>
+          <p style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 10 }}>Split With</p>
+          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, background: T.navActive, border: `1px solid ${T.heroBorder}`, cursor: "pointer", marginBottom: 8 }}>
+            <input type="checkbox" checked={includeMe} onChange={e => setIncludeMe(e.target.checked)} style={{ accentColor: "#6366f1" }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: T.navActiveText }}>Include me</span>
+          </label>
+          {contacts.map(c => (
+            <label key={c.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, background: selected.includes(c.id) ? T.navActive : T.contactCard, border: `1px solid ${selected.includes(c.id) ? T.heroBorder : T.contactCardBorder}`, cursor: "pointer", marginBottom: 6, transition: "all .15s" }}>
+              <input type="checkbox" checked={selected.includes(c.id)} onChange={() => toggle(c.id)} style={{ accentColor: "#6366f1" }} />
+              <span style={{ width: 28, height: 28, borderRadius: 8, background: c.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: c.color }}>{c.avatar}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{c.name}</span>
+            </label>
+          ))}
+        </div>
+        {perPerson > 0 && (
+          <div style={{ padding: "14px 16px", borderRadius: 12, background: T.reviewCard, border: `1px solid ${T.reviewCardBorder}`, textAlign: "center" }}>
+            <p style={{ fontSize: 12, color: T.muted, marginBottom: 4 }}>Each person pays</p>
+            <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 28, color: "#818cf8", margin: 0 }}>{fmt(perPerson)}</p>
+            <p style={{ fontSize: 12, color: T.muted, marginTop: 4 }}>{people} people · {fmt(total)} total</p>
+          </div>
+        )}
+        <Btn T={T} variant="ghost" style={{ width: "100%", justifyContent: "center" }} onClick={onClose}>Done</Btn>
+      </div>
+    </Modal>
+  );
+}
+
+// ─── CSV Export ────────────────────────────────────────────────────────────────
+function exportCSV(transactions) {
+  const rows = [["Date", "Description", "Category", "Type", "Amount", "To/From", "Status"]];
+  transactions.forEach(t => rows.push([t.date, t.description, t.category, t.type, t.amount, t.to_from, t.status]));
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = "payvault_transactions.csv"; a.click();
+  URL.revokeObjectURL(url);
+}
+
 // ─── Transaction Row ───────────────────────────────────────────────────────────
-function TxnRow({ t, hideBalance, onDelete, showDelete, T }) {
+function TxnRow({ t, hideBalance, onDelete, onEdit, showDelete, T }) {
   const meta = CAT_META[t.category] || { icon: Package, color: "#6b7280" };
   const isCredit = t.type === "credit";
   const [hov, setHov] = useState(false);
@@ -723,17 +855,25 @@ function TxnRow({ t, hideBalance, onDelete, showDelete, T }) {
         <meta.icon size={18} color={meta.color} />
       </div>
       <div style={{ flex: 1, overflow: "hidden" }}>
-        <p style={{ fontSize: 14, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.description}</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{t.description}</p>
+          {t.recurring && <Repeat size={11} color={T.navActiveText} title="Recurring" />}
+        </div>
         <p style={{ fontSize: 11, color: T.txnMeta, margin: 0 }}>{t.date} · {t.to_from} · <span style={{ color: meta.color }}>{t.category}</span></p>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
         <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 16, color: isCredit ? "#4ade80" : "#f87171", fontWeight: 700, margin: 0 }}>
           {isCredit ? "+" : "−"}{hideBalance ? "•••" : fmt(t.amount)}
         </p>
         {showDelete && hov && (
-          <button onClick={() => onDelete(t.id)} style={{ background: T.btnDanger, border: `1px solid ${T.btnDangerBorder}`, borderRadius: 7, padding: "5px 8px", cursor: "pointer", color: T.btnDangerText, display: "flex" }}>
-            <Trash2 size={13} />
-          </button>
+          <>
+            <button onClick={() => onEdit(t)} style={{ background: T.navActive, border: `1px solid ${T.heroBorder}`, borderRadius: 7, padding: "5px 8px", cursor: "pointer", color: T.navActiveText, display: "flex" }}>
+              <Pencil size={13} />
+            </button>
+            <button onClick={() => onDelete(t.id)} style={{ background: T.btnDanger, border: `1px solid ${T.btnDangerBorder}`, borderRadius: 7, padding: "5px 8px", cursor: "pointer", color: T.btnDangerText, display: "flex" }}>
+              <Trash2 size={13} />
+            </button>
+          </>
         )}
       </div>
     </div>
@@ -766,6 +906,19 @@ export default function PayVault() {
   const [paymentLimit, setPaymentLimit] = useState(() => parseFloat(localStorage.getItem("pv_limit") || "0"));
   const [showLimitModal, setShowLimitModal] = useState(false);
 
+  // Budgets
+  const [budgets, setBudgets] = useState(() => JSON.parse(localStorage.getItem("pv_budgets") || "{}"));
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+
+  // New modals
+  const [showSplitModal, setShowSplitModal] = useState(false);
+  const [editTxn, setEditTxn] = useState(null);
+
+  // Date range filter
+  const [dateRange, setDateRange] = useState("all"); // all | today | week | month | custom
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+
   // Data
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -789,6 +942,7 @@ export default function PayVault() {
 
   useEffect(() => { localStorage.setItem("pv_theme", theme); }, [theme]);
   useEffect(() => { localStorage.setItem("pv_limit", String(paymentLimit)); }, [paymentLimit]);
+  useEffect(() => { localStorage.setItem("pv_budgets", JSON.stringify(budgets)); }, [budgets]);
 
   // Auth restore
   useEffect(() => {
@@ -830,10 +984,26 @@ export default function PayVault() {
     if (wallet?.upi_id) { navigator.clipboard.writeText(wallet.upi_id); setCopied(true); setTimeout(() => setCopied(false), 2000); }
   };
 
+  const handleEditTxn = (id, changes) => {
+    setTransactions(p => p.map(t => t.id === id ? { ...t, ...changes } : t));
+    toast("Transaction updated");
+  };
+
   const filteredTxns = transactions.filter(t => {
     const matchCat = catFilter === "all" || t.category === catFilter;
     const matchSearch = !search || t.description.toLowerCase().includes(search.toLowerCase()) || (t.to_from || "").toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
+    let matchDate = true;
+    if (dateRange !== "all" && t.date) {
+      const d = new Date(t.date); const now = new Date();
+      if (dateRange === "today") matchDate = t.date === now.toISOString().split("T")[0];
+      else if (dateRange === "week") { const w = new Date(now); w.setDate(now.getDate() - 7); matchDate = d >= w; }
+      else if (dateRange === "month") matchDate = d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      else if (dateRange === "custom") {
+        if (customFrom) matchDate = matchDate && t.date >= customFrom;
+        if (customTo) matchDate = matchDate && t.date <= customTo;
+      }
+    }
+    return matchCat && matchSearch && matchDate;
   });
 
   const navItems = [
@@ -922,6 +1092,9 @@ export default function PayVault() {
       {showSend && <SendMoneyModal contacts={contacts} token={token} user={user} onClose={() => setShowSend(false)} onSuccess={handlePaySuccess} toast={toast} T={T} paymentLimit={paymentLimit} />}
       {showAddExp && <AddExpenseModal token={token} onClose={() => setShowAddExp(false)} onSuccess={handleExpenseAdded} toast={toast} T={T} />}
       {showLimitModal && <PaymentLimitModal paymentLimit={paymentLimit} onSave={v => { setPaymentLimit(v); toast(v > 0 ? `Limit set to ${fmt(v)}` : "Payment limit disabled"); }} onClose={() => setShowLimitModal(false)} T={T} />}
+      {showBudgetModal && <BudgetModal budgets={budgets} onSave={setBudgets} onClose={() => setShowBudgetModal(false)} T={T} analytics={analytics} />}
+      {showSplitModal && <SplitBillModal contacts={contacts} onClose={() => setShowSplitModal(false)} T={T} />}
+      {editTxn && <EditTxnModal txn={editTxn} onClose={() => setEditTxn(null)} onSave={handleEditTxn} T={T} />}
 
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
@@ -1087,16 +1260,79 @@ export default function PayVault() {
             {/* ══════════ EXPENSES ══════════ */}
             {page === "expenses" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+
+                {/* Summary Cards */}
+                {(() => {
+                  const debits = transactions.filter(t => t.type === "debit");
+                  const avgDaily = debits.length > 0 ? debits.reduce((s, t) => s + t.amount, 0) / Math.max(1, new Set(debits.map(t => t.date)).size) : 0;
+                  const topCat = analytics ? Object.entries(analytics.by_category).sort((a,b) => b[1]-a[1])[0] : null;
+                  const recurring = transactions.filter(t => t.recurring).length;
+                  return (
+                    <div className="grid-stats" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+                      {[
+                        ["Avg Daily Spend", fmt(avgDaily), "#818cf8", TrendingDown],
+                        ["Top Category", topCat ? topCat[0] : "—", "#f59e0b", Flame],
+                        ["Recurring", `${recurring} items`, "#22c55e", Repeat],
+                      ].map(([label, val, color, Icon]) => (
+                        <Card key={label} T={T} style={{ padding: 16 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                            <Icon size={14} color={color} />
+                            <span style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>{label}</span>
+                          </div>
+                          <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, color, margin: 0 }}>{val}</p>
+                        </Card>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                {/* Budget alerts */}
+                {Object.entries(budgets).filter(([cat, limit]) => {
+                  const spent = analytics?.by_category?.[cat] || 0;
+                  return parseFloat(limit) > 0 && spent > parseFloat(limit) * 0.8;
+                }).map(([cat, limit]) => {
+                  const spent = analytics?.by_category?.[cat] || 0;
+                  const over = spent > parseFloat(limit);
+                  const meta = CAT_META[cat];
+                  return (
+                    <div key={cat} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 16px", borderRadius: 12, background: over ? T.dangerBg : T.warningBg, border: `1px solid ${over ? T.dangerBorder : T.warningBorder}` }}>
+                      <meta.icon size={16} color={over ? T.dangerText : T.warningText} />
+                      <p style={{ fontSize: 13, color: over ? T.dangerText : T.warningText, margin: 0, flex: 1 }}>
+                        <strong>{cat}</strong>: {over ? "Over budget" : "Near budget"} — {fmt(spent)} of {fmt(limit)}
+                      </p>
+                      <Target size={14} color={over ? T.dangerText : T.warningText} />
+                    </div>
+                  );
+                })}
+
+                {/* Controls row */}
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", borderRadius: 10, background: T.input, border: `1px solid ${T.inputBorder}`, flex: 1, minWidth: 180 }}>
                     <Search size={14} color={T.muted} />
                     <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search transactions…"
                       style={{ background: "transparent", border: "none", outline: "none", color: T.text, fontSize: 13, fontFamily: "inherit", flex: 1 }} />
                     {search && <button onClick={() => setSearch("")} style={{ background: "none", border: "none", cursor: "pointer", color: T.muted, display: "flex" }}><X size={13} /></button>}
                   </div>
-                  <Btn T={T} variant="primary" onClick={() => setShowAddExp(true)}><Plus size={14} /> Add Transaction</Btn>
+                  <Btn T={T} variant="ghost" onClick={() => setShowSplitModal(true)}><Split size={14} /> Split</Btn>
+                  <Btn T={T} variant="ghost" onClick={() => setShowBudgetModal(true)}><Target size={14} /> Budgets</Btn>
+                  <Btn T={T} variant="ghost" onClick={() => exportCSV(filteredTxns)}><Download size={14} /> Export</Btn>
+                  <Btn T={T} variant="primary" onClick={() => setShowAddExp(true)}><Plus size={14} /> Add</Btn>
                 </div>
 
+                {/* Date range pills */}
+                <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+                  {[["all","All Time"],["today","Today"],["week","This Week"],["month","This Month"],["custom","Custom"]].map(([val, label]) => (
+                    <FilterPill key={val} T={T} label={<span style={{display:"flex",alignItems:"center",gap:5}}><Calendar size={11}/>{label}</span>} active={dateRange === val} onClick={() => setDateRange(val)} />
+                  ))}
+                </div>
+                {dateRange === "custom" && (
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <div style={{ flex: 1 }}><Input T={T} label="From" type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)} /></div>
+                    <div style={{ flex: 1 }}><Input T={T} label="To" type="date" value={customTo} onChange={e => setCustomTo(e.target.value)} /></div>
+                  </div>
+                )}
+
+                {/* Category filter pills */}
                 <div className="filter-pills" style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
                   <FilterPill T={T} label="All" active={catFilter === "all"} onClick={() => setCatFilter("all")} />
                   {CATEGORIES.map(c => {
@@ -1111,8 +1347,8 @@ export default function PayVault() {
                       Transactions <span style={{ fontSize: 13, color: T.muted, fontFamily: "inherit", fontWeight: 400 }}>({filteredTxns.length})</span>
                     </p>
                     <div style={{ display: "flex", gap: 14, fontSize: 13 }}>
-                      <span style={{ color: "#4ade80", fontWeight: 700 }}>+{hideBalance ? "•••" : fmt(analytics?.total_received ?? 0)}</span>
-                      <span style={{ color: "#f87171", fontWeight: 700 }}>-{hideBalance ? "•••" : fmt(analytics?.total_spent ?? 0)}</span>
+                      <span style={{ color: "#4ade80", fontWeight: 700 }}>+{hideBalance ? "•••" : fmt(filteredTxns.filter(t=>t.type==="credit").reduce((s,t)=>s+t.amount,0))}</span>
+                      <span style={{ color: "#f87171", fontWeight: 700 }}>-{hideBalance ? "•••" : fmt(filteredTxns.filter(t=>t.type==="debit").reduce((s,t)=>s+t.amount,0))}</span>
                     </div>
                   </div>
                   {filteredTxns.length === 0 ? (
@@ -1122,7 +1358,7 @@ export default function PayVault() {
                     </div>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                      {filteredTxns.map(t => <TxnRow key={t.id} t={t} hideBalance={hideBalance} onDelete={handleDeleteTxn} showDelete T={T} />)}
+                      {filteredTxns.map(t => <TxnRow key={t.id} t={t} hideBalance={hideBalance} onDelete={handleDeleteTxn} onEdit={setEditTxn} showDelete T={T} />)}
                     </div>
                   )}
                 </Card>
