@@ -892,6 +892,25 @@ function FilterPill({ label, active, onClick, T, color }) {
   );
 }
 
+function SecurityToggles({ T }) {
+  const [twoFA, setTwoFA] = useState(false);
+  const [biometric, setBiometric] = useState(true);
+  const [alerts, setAlerts] = useState(true);
+  const items = [["Two-Factor Auth", twoFA, setTwoFA, Lock], ["Biometric Login", biometric, setBiometric, Fingerprint], ["Transaction Alerts", alerts, setAlerts, Bell]];
+  return (
+    <>
+      {items.map(([label, on, setOn, Icon]) => (
+        <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: `1px solid ${T.border}` }}>
+          <span style={{ fontSize: 14, color: T.text, display: "flex", alignItems: "center", gap: 8 }}><Icon size={15} color={T.muted} />{label}</span>
+          <div onClick={() => setOn(p => !p)} style={{ width: 40, height: 22, borderRadius: 999, background: on ? "rgba(99,102,241,0.8)" : T.statBg, border: `1px solid ${on ? "rgba(99,102,241,0.4)" : T.border}`, position: "relative", cursor: "pointer", transition: "all .2s" }}>
+            <div style={{ width: 16, height: 16, borderRadius: "50%", background: "white", position: "absolute", top: 2, left: on ? 20 : 2, transition: "left .2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function PayVault() {
   const [token, setToken] = useState(() => localStorage.getItem("pv_token"));
@@ -1525,17 +1544,7 @@ export default function PayVault() {
                 {/* Security toggles */}
                 <Card T={T} style={{ padding: 20 }}>
                   <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: T.text, marginBottom: 16 }}>Security</p>
-                  {[["Two-Factor Auth", false, Lock], ["Biometric Login", true, Fingerprint], ["Transaction Alerts", true, Bell]].map(([label, defaultOn, Icon]) => {
-                    const [on, setOn] = useState(defaultOn);
-                    return (
-                      <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: `1px solid ${T.border}` }}>
-                        <span style={{ fontSize: 14, color: T.text, display: "flex", alignItems: "center", gap: 8 }}><Icon size={15} color={T.muted} />{label}</span>
-                        <div onClick={() => setOn(p => !p)} style={{ width: 40, height: 22, borderRadius: 999, background: on ? "rgba(99,102,241,0.8)" : T.statBg, border: `1px solid ${on ? "rgba(99,102,241,0.4)" : T.border}`, position: "relative", cursor: "pointer", transition: "all .2s" }}>
-                          <div style={{ width: 16, height: 16, borderRadius: "50%", background: "white", position: "absolute", top: 2, left: on ? 20 : 2, transition: "left .2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <SecurityToggles T={T} />
                 </Card>
 
                 <Btn T={T} variant="danger" style={{ width: "100%", justifyContent: "center" }} onClick={handleLogout}>
