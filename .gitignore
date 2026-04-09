@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.env
+venv/
+.env
+
+# React
+payvault-ui/node_modules/
+payvault-ui/build/
+payvault-ui/.env*
+
+# OS
+.DS_Store
+Thumbs.db
