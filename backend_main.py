@@ -31,12 +31,18 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
 # ─── Database ──────────────────────────────────────────────────────────────────
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./payvault.db")
-# Render uses PostgreSQL URLs starting with postgres://, SQLAlchemy needs postgresql://
 if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+pg8000://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+try:
+    engine = create_engine(DATABASE_URL, connect_args=connect_args)
+    engine.connect()
+except Exception:
+    DATABASE_URL = "sqlite:///./payvault.db"
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
