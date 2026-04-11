@@ -19,7 +19,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 # ─── Config ────────────────────────────────────────────────────────────────────
 SECRET_KEY = os.getenv("SECRET_KEY", "payvault-super-secret-key-change-in-production")
-ADMIN_KEY  = os.getenv("ADMIN_KEY", "payvault-admin-2024")
+ADMIN_KEY  = os.getenv("ADMIN_KEY", "payvault-admin-skey")
 ALGORITHM  = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
