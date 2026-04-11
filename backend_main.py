@@ -33,16 +33,11 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./payvault.db")
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+pg8000://", 1)
-elif DATABASE_URL.startswith("postgresql://"):
+elif DATABASE_URL.startswith("postgresql://") and "+" not in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-try:
-    engine = create_engine(DATABASE_URL, connect_args=connect_args)
-    engine.connect()
-except Exception:
-    DATABASE_URL = "sqlite:///./payvault.db"
-    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
