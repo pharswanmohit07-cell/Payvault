@@ -17,9 +17,15 @@ import uuid, os
 from sqlalchemy import create_engine, Column, String, Float, Boolean, Text, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # ─── Config ────────────────────────────────────────────────────────────────────
 SECRET_KEY = os.getenv("SECRET_KEY", "payvault-super-secret-key-change-in-production")
-ADMIN_KEY  = os.getenv("ADMIN_KEY", "payvault-admin-skey")
+ADMIN_KEY  = os.getenv("ADMIN_KEY", "payvault-super-admin-key-change-in-production")
 ALGORITHM  = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 

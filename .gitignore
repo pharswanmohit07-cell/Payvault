@@ -1,9 +1,9 @@
 # Python
 __pycache__/
 *.py[cod]
-*.env
 venv/
 .env
+*.env
 
 # React
 payvault-ui/node_modules/
