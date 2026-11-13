@@ -15,6 +15,7 @@ from typing import Optional
 import uuid, os
 
 from sqlalchemy import create_engine, Column, String, Float, Boolean, Text, ForeignKey
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 try:
@@ -37,6 +38,19 @@ elif DATABASE_URL.startswith("postgresql://") and "+" not in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+
+# Log only non-secret connection metadata to diagnose hosted database reachability.
+# Never print DATABASE_URL, username, password, or query-string credentials.
+db_url = make_url(DATABASE_URL)
+if db_url.drivername.startswith("postgresql"):
+    print(
+        "[PayVault DB diagnostics] "
+        f"driver={db_url.drivername} host={db_url.host!r} "
+        f"port={db_url.port or 5432} "
+        f"sslmode={db_url.query.get('sslmode', 'not specified')!r}",
+        flush=True,
+    )
+
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
