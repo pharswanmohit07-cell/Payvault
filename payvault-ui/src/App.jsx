@@ -22,7 +22,7 @@ import {
 
 // ─── API ───────────────────────────────────────────────────────────────────────
 const API = import.meta.env?.VITE_API_URL ?? "https://payvault-32xz.onrender.com/api";
-const API_REQUEST_TIMEOUT_MS = 30000;
+const API_REQUEST_TIMEOUT_MS = 60000;
 
 async function fetchWithTimeout(url, options = {}) {
   const controller = new AbortController();
@@ -32,7 +32,7 @@ async function fetchWithTimeout(url, options = {}) {
     return await fetch(url, { ...options, signal: controller.signal });
   } catch (error) {
     if (error.name === "AbortError") {
-      throw new Error("The PayVault server did not respond within 30 seconds. It may be waking up; please try again.");
+      throw new Error("The PayVault server did not respond within 60 seconds. It may be waking up; please try again.");
     }
     throw new Error("Could not reach the PayVault server. Please check your connection and try again.");
   } finally {
