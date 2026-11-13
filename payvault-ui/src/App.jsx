@@ -22,14 +22,31 @@ import {
 
 // ─── API ───────────────────────────────────────────────────────────────────────
 const API = import.meta.env?.VITE_API_URL ?? "https://payvault-32xz.onrender.com/api";
+const API_REQUEST_TIMEOUT_MS = 30000;
+
+async function fetchWithTimeout(url, options = {}) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("The PayVault server did not respond within 30 seconds. It may be waking up; please try again.");
+    }
+    throw new Error("Could not reach the PayVault server. Please check your connection and try again.");
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
 
 async function apiFetch(path, options = {}, token = null) {
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
   if (token) headers["Authorization"] = `Bearer ${token}`;
-  const res = await fetch(`${API}${path}`, { ...options, headers });
+  const res = await fetchWithTimeout(`${API}${path}`, { ...options, headers });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Network error" }));
-    throw new Error(err.detail || "Request failed");
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Request failed (${res.status})`);
   }
   return res.json();
 }
@@ -373,13 +390,17 @@ function AuthScreen({ onLogin, toast, T }) {
   const set = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
 
   const submit = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       let data;
       if (mode === "login") {
         const body = new URLSearchParams({ username: form.email, password: form.password });
-        const res = await fetch(`${API}/auth/login`, { method: "POST", body, headers: { "Content-Type": "application/x-www-form-urlencoded" } });
-        if (!res.ok) { const e = await res.json(); throw new Error(e.detail); }
+        const res = await fetchWithTimeout(`${API}/auth/login`, { method: "POST", body, headers: { "Content-Type": "application/x-www-form-urlencoded" } });
+        if (!res.ok) {
+          const error = await res.json().catch(() => ({}));
+          throw new Error(error.detail || `Login failed (${res.status})`);
+        }
         data = await res.json();
       } else {
         data = await apiFetch("/auth/register", { method: "POST", body: JSON.stringify({ name: form.name, email: form.email, password: form.password, phone: form.phone }) });
