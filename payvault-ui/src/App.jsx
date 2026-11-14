@@ -241,6 +241,26 @@ function GlobalStyles({ T }) {
       @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
       .page-enter { animation: fadeIn .3s ease; }
       select option { background: ${T.bg}; color: ${T.text}; }
+      .settings-layout {
+        width: 100%;
+        max-width: 1180px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: stretch;
+        gap: 18px;
+      }
+      .settings-layout > div { min-width: 0; }
+      .settings-profile, .settings-logout { grid-column: 1 / -1; }
+      .settings-profile .profile-detail-row:last-child { border-bottom: 0 !important; }
+      .settings-profile .profile-detail-value {
+        min-width: 0;
+        max-width: 68%;
+        text-align: right;
+        overflow-wrap: anywhere;
+      }
+      .settings-profile .profile-identity-copy { min-width: 0; }
+      .settings-profile .profile-identity-copy p { overflow-wrap: anywhere; }
       @media (max-width: 768px) {
         .sidebar-desktop { display: none !important; }
         .mobile-header { display: flex !important; }
@@ -256,6 +276,27 @@ function GlobalStyles({ T }) {
         .topbar-date { display: none !important; }
         .donut-chart { width: 200px !important; height: 200px !important; }
         .quick-send-scroll { gap: 12px !important; }
+        .settings-layout {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 14px;
+        }
+        .settings-profile, .settings-logout { grid-column: auto; }
+        .settings-profile > div, .settings-payment > div, .settings-security > div {
+          padding: 16px !important;
+        }
+      }
+      @media (max-width: 420px) {
+        .settings-profile .profile-detail-row {
+          align-items: flex-start !important;
+          flex-direction: column;
+          gap: 5px;
+        }
+        .settings-profile .profile-detail-value {
+          max-width: 100%;
+          text-align: left;
+          padding-left: 20px;
+        }
+        .demo-access-panel { padding: 11px !important; }
       }
       @media (min-width: 769px) {
         .mobile-header { display: none !important; }
@@ -388,12 +429,7 @@ function AuthScreen({ onLogin, toast, T }) {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "", phone: "" });
   const set = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
-  const demoAccounts = [
-    { label: "XYZ Demo", email: "xyz@payvault.com", password: "XYZ1234" },
-    { label: "Alex Demo", email: "alex@payvault.com", password: "ALEX1234" },
-    { label: "Sam Demo", email: "sam@payvault.com", password: "SAM1234" },
-    { label: "Maya Demo", email: "maya@payvault.com", password: "MAYA1234" },
-  ];
+  const demoAccount = { email: "xyz@payvault.com", password: "XYZ1234" };
 
   const submit = async () => {
     if (loading) return;
@@ -455,41 +491,26 @@ function AuthScreen({ onLogin, toast, T }) {
             <Input T={T} label="Email Address" type="email" autoComplete="off" value={form.email} onChange={set("email")} onKeyDown={e => e.key === "Enter" && submit()} />
             <Input T={T} label="Password" type="password" autoComplete="off" value={form.password} onChange={set("password")} onKeyDown={e => e.key === "Enter" && submit()} />
             {mode === "login" && (
-              <div style={{ background: T.reviewCard, border: `1px solid ${T.reviewCardBorder}`, borderRadius: 10, padding: "12px 14px", fontSize: 12, color: T.textSub }}>
+              <div className="demo-access-panel" style={{ background: T.reviewCard, border: `1px solid ${T.reviewCardBorder}`, borderRadius: 10, padding: "12px 14px", fontSize: 12, color: T.textSub }}>
                 <div style={{ color: T.text, fontWeight: 800, marginBottom: 4 }}>Demo access</div>
-                <div style={{ marginBottom: 10 }}>Demo wallets use sample balances and simulated transfers only. No real money moves.</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                  <div style={{ borderRadius: 8, padding: "8px 9px", background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.22)" }}>
-                    <strong style={{ color: T.text }}>Demo — xyz@payvault.com / XYZ1234</strong>
-                  </div>
-                  {demoAccounts.slice(1).map(account => (
-                    <button
-                      key={account.email}
-                      type="button"
-                      onClick={() => setForm(p => ({ ...p, email: account.email, password: account.password }))}
-                      style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        gap: 8, width: "100%", textAlign: "left", padding: "7px 9px",
-                        borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent",
-                        color: T.textSub, fontFamily: "inherit", fontSize: 11, cursor: "pointer",
-                      }}
-                    >
-                      <span><strong style={{ color: T.text }}>{account.label}</strong><br />{account.email} / {account.password}</span>
-                      <span style={{ color: T.navActiveText, fontWeight: 700, flexShrink: 0 }}>Use account</span>
-                    </button>
-                  ))}
-                </div>
+                <p style={{ margin: "0 0 10px", lineHeight: 1.45 }}>
+                  Explore PayVault with a ready-made sample wallet. Demo activity is simulated; no real money moves.
+                </p>
                 <button
                   type="button"
-                  onClick={() => setForm(p => ({ ...p, email: demoAccounts[0].email, password: demoAccounts[0].password }))}
+                  onClick={() => {
+                    setForm(p => ({ ...p, email: demoAccount.email, password: demoAccount.password }));
+                    toast("XYZ demo account details filled. Select Sign In to continue.", "info");
+                  }}
                   style={{
-                    marginTop: 9, width: "100%", padding: "7px 9px", borderRadius: 8,
-                    border: "1px solid rgba(99,102,241,0.22)", background: "transparent",
-                    color: T.navActiveText, fontFamily: "inherit", fontSize: 11, fontWeight: 700,
-                    cursor: "pointer", textAlign: "left",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    gap: 8, width: "100%", padding: "10px 12px", borderRadius: 8,
+                    border: "1px solid rgba(99,102,241,0.3)", background: "rgba(99,102,241,0.12)",
+                    color: T.navActiveText, fontFamily: "inherit", fontSize: 12, fontWeight: 800,
+                    cursor: "pointer", textAlign: "center",
                   }}
                 >
-                  Use XYZ Demo account
+                  <Wallet size={14} /> Use demo account
                 </button>
               </div>
             )}
@@ -1556,61 +1577,69 @@ export default function PayVault() {
 
             {/* ══════════ SETTINGS ══════════ */}
             {page === "settings" && (
-              <div style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 16 }}>
+              <div className="settings-layout">
                 {/* Profile */}
-                <Card T={T} style={{ padding: 24 }}>
-                  <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, color: T.text, marginBottom: 20 }}>Profile</p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-                    <div style={{ width: 54, height: 54, borderRadius: 14, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800, color: "white", flexShrink: 0 }}>{user.avatar}</div>
-                    <div>
-                      <p style={{ fontWeight: 700, fontSize: 16, color: T.text, margin: 0 }}>{user.name}</p>
-                      <p style={{ fontSize: 13, color: T.muted, margin: 0 }}>{user.email}</p>
+                <div className="settings-profile">
+                  <Card T={T} style={{ padding: 24 }}>
+                    <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, color: T.text, marginBottom: 20 }}>Profile</p>
+                    <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+                      <div style={{ width: 54, height: 54, borderRadius: 14, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800, color: "white", flexShrink: 0 }}>{user.avatar}</div>
+                      <div className="profile-identity-copy">
+                        <p style={{ fontWeight: 700, fontSize: 16, color: T.text, margin: 0 }}>{user.name}</p>
+                        <p style={{ fontSize: 13, color: T.muted, margin: 0 }}>{user.email}</p>
+                      </div>
                     </div>
-                  </div>
-                  {[["UPI ID", wallet?.upi_id, Landmark], ["Phone", user.phone || "—", Phone], ["Member Since", user.joined, CalendarDays]].map(([label, val, Icon]) => (
-                    <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: `1px solid ${T.border}` }}>
-                      <span style={{ fontSize: 13, color: T.muted, display: "flex", alignItems: "center", gap: 7 }}><Icon size={13} />{label}</span>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{val}</span>
-                    </div>
-                  ))}
-                </Card>
+                    {[["UPI ID", wallet?.upi_id, Landmark], ["Phone", user.phone || "—", Phone], ["Member Since", user.joined, CalendarDays]].map(([label, val, Icon]) => (
+                      <div className="profile-detail-row" key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, padding: "12px 0", borderBottom: `1px solid ${T.border}` }}>
+                        <span style={{ fontSize: 13, color: T.muted, display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}><Icon size={13} />{label}</span>
+                        <span className="profile-detail-value" style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{val}</span>
+                      </div>
+                    ))}
+                  </Card>
+                </div>
 
                 {/* Payment Limit */}
-                <Card T={T} style={{ padding: 22 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                    <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: T.text, margin: 0 }}>Payment Limit</p>
-                    <Btn T={T} variant="warning" style={{ padding: "7px 14px", fontSize: 12 }} onClick={() => setShowLimitModal(true)}>
-                      <SlidersHorizontal size={13} /> Configure
-                    </Btn>
-                  </div>
-                  {paymentLimit > 0 ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, background: T.warningBg, border: `1px solid ${T.warningBorder}` }}>
-                      <TriangleAlert size={20} color={T.warningText} />
-                      <div>
-                        <p style={{ fontWeight: 700, color: T.warningText, margin: "0 0 3px" }}>Active Limit: {fmt(paymentLimit)}</p>
-                        <p style={{ fontSize: 12, color: T.textSub, margin: 0 }}>A warning will appear for any payment exceeding this amount.</p>
-                      </div>
+                <div className="settings-payment">
+                  <Card T={T} style={{ padding: 22, height: "100%" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                      <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: T.text, margin: 0 }}>Payment Limit</p>
+                      <Btn T={T} variant="warning" style={{ padding: "7px 14px", fontSize: 12, flexShrink: 0 }} onClick={() => setShowLimitModal(true)}>
+                        <SlidersHorizontal size={13} /> Configure
+                      </Btn>
                     </div>
-                  ) : (
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, background: T.statBg, border: `1px solid ${T.border}` }}>
-                      <Shield size={20} color={T.muted} />
-                      <div>
-                        <p style={{ fontWeight: 600, color: T.muted, margin: "0 0 3px" }}>No limit set</p>
-                        <p style={{ fontSize: 12, color: T.muted, margin: 0 }}>Configure a per-transaction limit to get warned on large payments.</p>
+                    {paymentLimit > 0 ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, background: T.warningBg, border: `1px solid ${T.warningBorder}` }}>
+                        <TriangleAlert size={20} color={T.warningText} style={{ flexShrink: 0 }} />
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ fontWeight: 700, color: T.warningText, margin: "0 0 3px" }}>Active Limit: {fmt(paymentLimit)}</p>
+                          <p style={{ fontSize: 12, color: T.textSub, margin: 0 }}>A warning will appear for any payment exceeding this amount.</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </Card>
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, background: T.statBg, border: `1px solid ${T.border}` }}>
+                        <Shield size={20} color={T.muted} style={{ flexShrink: 0 }} />
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ fontWeight: 600, color: T.muted, margin: "0 0 3px" }}>No limit set</p>
+                          <p style={{ fontSize: 12, color: T.muted, margin: 0 }}>Configure a per-transaction limit to get warned on large payments.</p>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                </div>
 
                 {/* Security toggles */}
-                <Card T={T} style={{ padding: 20 }}>
-                  <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: T.text, marginBottom: 16 }}>Security</p>
-                  <SecurityToggles T={T} />
-                </Card>
+                <div className="settings-security">
+                  <Card T={T} style={{ padding: 20, height: "100%" }}>
+                    <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: T.text, marginBottom: 16 }}>Security</p>
+                    <SecurityToggles T={T} />
+                  </Card>
+                </div>
 
-                <Btn T={T} variant="danger" style={{ width: "100%", justifyContent: "center" }} onClick={handleLogout}>
-                  <LogOut size={15} /> Sign Out of PayVault
-                </Btn>
+                <div className="settings-logout">
+                  <Btn T={T} variant="danger" style={{ width: "100%", justifyContent: "center" }} onClick={handleLogout}>
+                    <LogOut size={15} /> Sign Out of PayVault
+                  </Btn>
+                </div>
               </div>
             )}
 
