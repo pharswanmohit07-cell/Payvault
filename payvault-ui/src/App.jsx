@@ -388,6 +388,12 @@ function AuthScreen({ onLogin, toast, T }) {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "", phone: "" });
   const set = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
+  const demoAccounts = [
+    { label: "XYZ Demo", email: "xyz@payvault.com", password: "XYZ1234" },
+    { label: "Alex Demo", email: "alex@payvault.com", password: "ALEX1234" },
+    { label: "Sam Demo", email: "sam@payvault.com", password: "SAM1234" },
+    { label: "Maya Demo", email: "maya@payvault.com", password: "MAYA1234" },
+  ];
 
   const submit = async () => {
     if (loading) return;
@@ -443,14 +449,48 @@ function AuthScreen({ onLogin, toast, T }) {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {mode === "register" && <>
-              <Input T={T} label="Full Name" placeholder="Rohit Singh" value={form.name} onChange={set("name")} onKeyDown={e => e.key === "Enter" && submit()} />
-              <Input T={T} label="Phone" placeholder="+91 98765 43210" value={form.phone} onChange={set("phone")} onKeyDown={e => e.key === "Enter" && submit()} />
+              <Input T={T} label="Full Name" autoComplete="off" value={form.name} onChange={set("name")} onKeyDown={e => e.key === "Enter" && submit()} />
+              <Input T={T} label="Phone" autoComplete="off" value={form.phone} onChange={set("phone")} onKeyDown={e => e.key === "Enter" && submit()} />
             </>}
-            <Input T={T} label="Email Address" type="email" placeholder="rohit@payvault.com" value={form.email} onChange={set("email")} onKeyDown={e => e.key === "Enter" && submit()} />
-            <Input T={T} label="Password" type="password" placeholder="••••••••" value={form.password} onChange={set("password")} onKeyDown={e => e.key === "Enter" && submit()} />
+            <Input T={T} label="Email Address" type="email" autoComplete="off" value={form.email} onChange={set("email")} onKeyDown={e => e.key === "Enter" && submit()} />
+            <Input T={T} label="Password" type="password" autoComplete="off" value={form.password} onChange={set("password")} onKeyDown={e => e.key === "Enter" && submit()} />
             {mode === "login" && (
-              <div style={{ background: T.reviewCard, border: `1px solid ${T.reviewCardBorder}`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: T.textSub }}>
-                Demo — <strong style={{ color: T.text }}>rohit@payvault.com</strong> / <strong style={{ color: T.text }}>demo1234</strong>
+              <div style={{ background: T.reviewCard, border: `1px solid ${T.reviewCardBorder}`, borderRadius: 10, padding: "12px 14px", fontSize: 12, color: T.textSub }}>
+                <div style={{ color: T.text, fontWeight: 800, marginBottom: 4 }}>Demo access</div>
+                <div style={{ marginBottom: 10 }}>Demo wallets use sample balances and simulated transfers only. No real money moves.</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                  <div style={{ borderRadius: 8, padding: "8px 9px", background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.22)" }}>
+                    <strong style={{ color: T.text }}>Demo — xyz@payvault.com / XYZ1234</strong>
+                  </div>
+                  {demoAccounts.slice(1).map(account => (
+                    <button
+                      key={account.email}
+                      type="button"
+                      onClick={() => setForm(p => ({ ...p, email: account.email, password: account.password }))}
+                      style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        gap: 8, width: "100%", textAlign: "left", padding: "7px 9px",
+                        borderRadius: 8, border: `1px solid ${T.border}`, background: "transparent",
+                        color: T.textSub, fontFamily: "inherit", fontSize: 11, cursor: "pointer",
+                      }}
+                    >
+                      <span><strong style={{ color: T.text }}>{account.label}</strong><br />{account.email} / {account.password}</span>
+                      <span style={{ color: T.navActiveText, fontWeight: 700, flexShrink: 0 }}>Use account</span>
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setForm(p => ({ ...p, email: demoAccounts[0].email, password: demoAccounts[0].password }))}
+                  style={{
+                    marginTop: 9, width: "100%", padding: "7px 9px", borderRadius: 8,
+                    border: "1px solid rgba(99,102,241,0.22)", background: "transparent",
+                    color: T.navActiveText, fontFamily: "inherit", fontSize: 11, fontWeight: 700,
+                    cursor: "pointer", textAlign: "left",
+                  }}
+                >
+                  Use XYZ Demo account
+                </button>
               </div>
             )}
             <Btn T={T} variant="primary" loading={loading} style={{ width: "100%", justifyContent: "center", marginTop: 4 }} onClick={submit}>
