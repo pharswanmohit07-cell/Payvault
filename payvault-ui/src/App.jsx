@@ -64,6 +64,11 @@ const CAT_META = {
   Other:         { icon: Package,       color: "#6b7280" },
 };
 const CATEGORIES = Object.keys(CAT_META);
+const QUICK_SEND_DEMO_LABELS = {
+  "alex@payvault": { name: "akankshya", avatar: "A" },
+  "sam@payvault": { name: "virat", avatar: "V" },
+  "maya@payvault": { name: "ramu", avatar: "R" },
+};
 const fmt = (n) => `₹${Number(n).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
 function buildPieGradient(entries, total) {
@@ -491,28 +496,22 @@ function AuthScreen({ onLogin, toast, T }) {
             <Input T={T} label="Email Address" type="email" autoComplete="off" value={form.email} onChange={set("email")} onKeyDown={e => e.key === "Enter" && submit()} />
             <Input T={T} label="Password" type="password" autoComplete="off" value={form.password} onChange={set("password")} onKeyDown={e => e.key === "Enter" && submit()} />
             {mode === "login" && (
-              <div className="demo-access-panel" style={{ background: T.reviewCard, border: `1px solid ${T.reviewCardBorder}`, borderRadius: 10, padding: "12px 14px", fontSize: 12, color: T.textSub }}>
-                <div style={{ color: T.text, fontWeight: 800, marginBottom: 4 }}>Demo access</div>
-                <p style={{ margin: "0 0 10px", lineHeight: 1.45 }}>
-                  Explore PayVault with a ready-made sample wallet. Demo activity is simulated; no real money moves.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setForm(p => ({ ...p, email: demoAccount.email, password: demoAccount.password }));
-                    toast("XYZ demo account details filled. Select Sign In to continue.", "info");
-                  }}
-                  style={{
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    gap: 8, width: "100%", padding: "10px 12px", borderRadius: 8,
-                    border: "1px solid rgba(99,102,241,0.3)", background: "rgba(99,102,241,0.12)",
-                    color: T.navActiveText, fontFamily: "inherit", fontSize: 12, fontWeight: 800,
-                    cursor: "pointer", textAlign: "center",
-                  }}
-                >
-                  <Wallet size={14} /> Use demo account
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setForm(p => ({ ...p, email: demoAccount.email, password: demoAccount.password }));
+                  toast("XYZ demo account details filled. Select Sign In to continue.", "info");
+                }}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  gap: 8, width: "100%", padding: "11px 14px", borderRadius: 10,
+                  border: `1px solid ${T.reviewCardBorder}`, background: T.reviewCard,
+                  color: T.navActiveText, fontFamily: "inherit", fontSize: 13, fontWeight: 800,
+                  cursor: "pointer", textAlign: "center",
+                }}
+              >
+                <Wallet size={15} /> Use demo account
+              </button>
             )}
             <Btn T={T} variant="primary" loading={loading} style={{ width: "100%", justifyContent: "center", marginTop: 4 }} onClick={submit}>
               {mode === "login" ? "Sign In" : "Create Account"}
@@ -1327,16 +1326,21 @@ export default function PayVault() {
                     <button onClick={() => setShowSend(true)} style={{ background: "none", border: "none", color: T.navActiveText, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>See all</button>
                   </div>
                   <div className="quick-send-scroll" style={{ display: "flex", gap: 20, overflowX: "auto", paddingBottom: 4 }}>
-                    {contacts.map(c => (
-                      <div key={c.id} onClick={() => setShowSend(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", minWidth: 60, flexShrink: 0 }}>
-                        <div style={{ width: 48, height: 48, borderRadius: 14, background: c.color + "20", border: `1px solid ${c.color}38`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: c.color, transition: "transform .2s" }}
-                          onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.1)"; }}
-                          onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}>
-                          {c.avatar}
-                        </div>
-                        <p style={{ fontSize: 11, color: T.muted, textAlign: "center", maxWidth: 60, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{c.name.split(" ")[0]}</p>
-                      </div>
-                    ))}
+                    {contacts
+                      .filter(c => QUICK_SEND_DEMO_LABELS[c.upi])
+                      .map(c => {
+                        const display = QUICK_SEND_DEMO_LABELS[c.upi];
+                        return (
+                          <div key={c.id} onClick={() => setShowSend(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", minWidth: 60, flexShrink: 0 }}>
+                            <div style={{ width: 48, height: 48, borderRadius: 14, background: c.color + "20", border: `1px solid ${c.color}38`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: c.color, transition: "transform .2s" }}
+                              onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.1)"; }}
+                              onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}>
+                              {display.avatar}
+                            </div>
+                            <p style={{ fontSize: 11, color: T.muted, textAlign: "center", maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{display.name}</p>
+                          </div>
+                        );
+                      })}
                     <div onClick={() => setShowSend(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", minWidth: 60, flexShrink: 0 }}>
                       <div style={{ width: 48, height: 48, borderRadius: 14, background: T.cardAccent, border: `1px dashed ${T.borderStrong}`, display: "flex", alignItems: "center", justifyContent: "center" }}><Plus size={18} color={T.muted} /></div>
                       <p style={{ fontSize: 11, color: T.muted, margin: 0 }}>New</p>
