@@ -209,6 +209,10 @@ def seed_demo_accounts():
     finally:
         db.close()
 
+@app.on_event("startup")
+def initialize_demo_accounts():
+    seed_demo_accounts()
+
 def create_access_token(data, expires_delta=None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
