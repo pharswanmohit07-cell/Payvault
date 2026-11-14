@@ -443,16 +443,11 @@ function AuthScreen({ onLogin, toast, T }) {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {mode === "register" && <>
-              <Input T={T} label="Full Name" placeholder="Rohit Singh" value={form.name} onChange={set("name")} onKeyDown={e => e.key === "Enter" && submit()} />
-              <Input T={T} label="Phone" placeholder="+91 98765 43210" value={form.phone} onChange={set("phone")} onKeyDown={e => e.key === "Enter" && submit()} />
+              <Input T={T} label="Full Name" autoComplete="off" value={form.name} onChange={set("name")} onKeyDown={e => e.key === "Enter" && submit()} />
+              <Input T={T} label="Phone" autoComplete="off" value={form.phone} onChange={set("phone")} onKeyDown={e => e.key === "Enter" && submit()} />
             </>}
-            <Input T={T} label="Email Address" type="email" placeholder="rohit@payvault.com" value={form.email} onChange={set("email")} onKeyDown={e => e.key === "Enter" && submit()} />
-            <Input T={T} label="Password" type="password" placeholder="••••••••" value={form.password} onChange={set("password")} onKeyDown={e => e.key === "Enter" && submit()} />
-            {mode === "login" && (
-              <div style={{ background: T.reviewCard, border: `1px solid ${T.reviewCardBorder}`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: T.textSub }}>
-                Demo — <strong style={{ color: T.text }}>rohit@payvault.com</strong> / <strong style={{ color: T.text }}>demo1234</strong>
-              </div>
-            )}
+            <Input T={T} label="Email Address" type="email" autoComplete="off" value={form.email} onChange={set("email")} onKeyDown={e => e.key === "Enter" && submit()} />
+            <Input T={T} label="Password" type="password" autoComplete="off" value={form.password} onChange={set("password")} onKeyDown={e => e.key === "Enter" && submit()} />
             <Btn T={T} variant="primary" loading={loading} style={{ width: "100%", justifyContent: "center", marginTop: 4 }} onClick={submit}>
               {mode === "login" ? "Sign In" : "Create Account"}
             </Btn>
