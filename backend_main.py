@@ -15,6 +15,7 @@ from typing import Optional
 import uuid, os
 
 from sqlalchemy import create_engine, Column, String, Float, Boolean, Text, ForeignKey
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 try:
@@ -37,6 +38,19 @@ elif DATABASE_URL.startswith("postgresql://") and "+" not in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+
+# Log only non-secret connection metadata to diagnose hosted database reachability.
+# Never print DATABASE_URL, username, password, or query-string credentials.
+db_url = make_url(DATABASE_URL)
+if db_url.drivername.startswith("postgresql"):
+    print(
+        "[PayVault DB diagnostics] "
+        f"driver={db_url.drivername} host={db_url.host!r} "
+        f"port={db_url.port or 5432} "
+        f"sslmode={db_url.query.get('sslmode', 'not specified')!r}",
+        flush=True,
+    )
+
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
@@ -84,6 +98,8 @@ app = FastAPI(title="PayVault API", version="2.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://localhost:5173", "https://payvault1.vercel.app"],
+    # Allow this PayVault project's Vercel preview deployments as well as production.
+    allow_origin_regex=r"https://payvault-[a-z0-9-]+-pharswanmohit07-cells-projects\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -102,6 +118,100 @@ def get_db():
 # ─── Helpers ───────────────────────────────────────────────────────────────────
 def hash_password(pw): return pwd_context.hash(pw)
 def verify_password(plain, hashed): return pwd_context.verify(plain, hashed)
+
+# These accounts contain synthetic balances and transaction history for classroom demos.
+# They are created only when ENABLE_DEMO_ACCOUNTS=true is set in the hosting environment.
+DEMO_USERS = [
+    {"key": "xyz", "name": "XYZ Demo", "email": "xyz@payvault.com", "password": "XYZ1234"},
+    {"key": "alex", "name": "Alex Demo", "email": "alex@payvault.com", "password": "ALEX1234"},
+    {"key": "sam", "name": "Sam Demo", "email": "sam@payvault.com", "password": "SAM1234"},
+    {"key": "maya", "name": "Maya Demo", "email": "maya@payvault.com", "password": "MAYA1234"},
+]
+
+def seed_demo_accounts():
+    enabled = os.getenv("ENABLE_DEMO_ACCOUNTS", "false").strip().lower() in {"1", "true", "yes", "on"}
+    if not enabled:
+        return
+
+    db = SessionLocal()
+    try:
+        users = {}
+        for item in DEMO_USERS:
+            user = db.query(UserModel).filter(UserModel.email == item["email"]).first()
+            if user is None:
+                initials = "".join(part[0].upper() for part in item["name"].split()[:2])
+                user = UserModel(
+                    id=str(uuid.uuid4()),
+                    name=item["name"],
+                    email=item["email"],
+                    hashed_password=hash_password(item["password"]),
+                    balance=0.0,
+                    avatar=initials,
+                    phone="",
+                    upi_id=f"{item['key']}@payvault",
+                    joined=datetime.utcnow().strftime("%Y-%m-%d"),
+                )
+                db.add(user)
+                db.flush()
+            users[item["key"]] = user
+
+        today = datetime.utcnow()
+        demo_transactions = [
+            # Opening balances
+            ("demo-xyz-opening", "xyz", "credit", "Income", "Demo opening balance", 20000.0, "PayVault Demo", 14),
+            ("demo-alex-opening", "alex", "credit", "Income", "Demo opening balance", 12000.0, "PayVault Demo", 14),
+            ("demo-sam-opening", "sam", "credit", "Income", "Demo opening balance", 8500.0, "PayVault Demo", 14),
+            ("demo-maya-opening", "maya", "credit", "Income", "Demo opening balance", 15000.0, "PayVault Demo", 14),
+            # Sample everyday activity
+            ("demo-xyz-utilities", "xyz", "debit", "Utilities", "Electricity bill", 3200.0, "City Utilities", 4),
+            ("demo-alex-groceries", "alex", "debit", "Food", "Grocery shopping", 900.0, "Fresh Market", 3),
+            ("demo-sam-entertainment", "sam", "debit", "Entertainment", "Movie tickets", 450.0, "Cinema", 3),
+            ("demo-maya-shopping", "maya", "debit", "Shopping", "Shopping purchase", 1200.0, "Urban Store", 4),
+            # Matched in-app transfers: each debit has a corresponding recipient credit.
+            ("demo-xyz-alex-out", "xyz", "debit", "Transfer", "Demo transfer to Alex", 1800.0, "Alex Demo", 2),
+            ("demo-xyz-alex-in", "alex", "credit", "Transfer", "Demo transfer from XYZ", 1800.0, "XYZ Demo", 2),
+            ("demo-maya-xyz-out", "maya", "debit", "Transfer", "Demo transfer to XYZ", 950.0, "XYZ Demo", 1),
+            ("demo-maya-xyz-in", "xyz", "credit", "Transfer", "Demo transfer from Maya", 950.0, "Maya Demo", 1),
+            ("demo-sam-maya-out", "sam", "debit", "Transfer", "Demo transfer to Maya", 600.0, "Maya Demo", 2),
+            ("demo-sam-maya-in", "maya", "credit", "Transfer", "Demo transfer from Sam", 600.0, "Sam Demo", 2),
+            ("demo-alex-sam-out", "alex", "debit", "Transfer", "Demo transfer to Sam", 750.0, "Sam Demo", 1),
+            ("demo-alex-sam-in", "sam", "credit", "Transfer", "Demo transfer from Alex", 750.0, "Alex Demo", 1),
+        ]
+
+        for txn_id, user_key, txn_type, category, description, amount, to_from, days_ago in demo_transactions:
+            exists = db.query(TransactionModel).filter(TransactionModel.id == txn_id).first()
+            if exists:
+                continue
+            txn_date = (today - timedelta(days=days_ago)).strftime("%Y-%m-%d")
+            user = users[user_key]
+            db.add(TransactionModel(
+                id=txn_id,
+                user_id=user.id,
+                type=txn_type,
+                category=category,
+                description=description,
+                amount=amount,
+                to_from=to_from,
+                date=txn_date,
+                status="completed",
+                recurring=False,
+            ))
+            if txn_type == "credit":
+                user.balance = (user.balance or 0.0) + amount
+            else:
+                user.balance = (user.balance or 0.0) - amount
+
+        db.commit()
+        print("[PayVault] Demo accounts are enabled; synthetic demo data is ready.", flush=True)
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+@app.on_event("startup")
+def initialize_demo_accounts():
+    seed_demo_accounts()
 
 def create_access_token(data, expires_delta=None):
     to_encode = data.copy()
@@ -342,4 +452,4 @@ def admin_reset_user(email: str, admin_key: str, db: Session = Depends(get_db)):
 # ─── Health ────────────────────────────────────────────────────────────────────
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "service": "PayVault API", "db": "sqlite"}
+    return {"status": "ok", "service": "PayVault API", "db": engine.dialect.name}

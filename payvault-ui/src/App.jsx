@@ -22,14 +22,31 @@ import {
 
 // ─── API ───────────────────────────────────────────────────────────────────────
 const API = import.meta.env?.VITE_API_URL ?? "https://payvault-32xz.onrender.com/api";
+const API_REQUEST_TIMEOUT_MS = 60000;
+
+async function fetchWithTimeout(url, options = {}) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("The PayVault server did not respond within 60 seconds. It may be waking up; please try again.");
+    }
+    throw new Error("Could not reach the PayVault server. Please check your connection and try again.");
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
 
 async function apiFetch(path, options = {}, token = null) {
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
   if (token) headers["Authorization"] = `Bearer ${token}`;
-  const res = await fetch(`${API}${path}`, { ...options, headers });
+  const res = await fetchWithTimeout(`${API}${path}`, { ...options, headers });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Network error" }));
-    throw new Error(err.detail || "Request failed");
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Request failed (${res.status})`);
   }
   return res.json();
 }
@@ -47,6 +64,11 @@ const CAT_META = {
   Other:         { icon: Package,       color: "#6b7280" },
 };
 const CATEGORIES = Object.keys(CAT_META);
+const QUICK_SEND_DEMO_LABELS = {
+  "alex@payvault": { name: "akankshya", avatar: "A" },
+  "sam@payvault": { name: "virat", avatar: "V" },
+  "maya@payvault": { name: "ramu", avatar: "R" },
+};
 const fmt = (n) => `₹${Number(n).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
 function buildPieGradient(entries, total) {
@@ -224,6 +246,26 @@ function GlobalStyles({ T }) {
       @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
       .page-enter { animation: fadeIn .3s ease; }
       select option { background: ${T.bg}; color: ${T.text}; }
+      .settings-layout {
+        width: 100%;
+        max-width: 1180px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: stretch;
+        gap: 18px;
+      }
+      .settings-layout > div { min-width: 0; }
+      .settings-profile, .settings-logout { grid-column: 1 / -1; }
+      .settings-profile .profile-detail-row:last-child { border-bottom: 0 !important; }
+      .settings-profile .profile-detail-value {
+        min-width: 0;
+        max-width: 68%;
+        text-align: right;
+        overflow-wrap: anywhere;
+      }
+      .settings-profile .profile-identity-copy { min-width: 0; }
+      .settings-profile .profile-identity-copy p { overflow-wrap: anywhere; }
       @media (max-width: 768px) {
         .sidebar-desktop { display: none !important; }
         .mobile-header { display: flex !important; }
@@ -239,6 +281,27 @@ function GlobalStyles({ T }) {
         .topbar-date { display: none !important; }
         .donut-chart { width: 200px !important; height: 200px !important; }
         .quick-send-scroll { gap: 12px !important; }
+        .settings-layout {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 14px;
+        }
+        .settings-profile, .settings-logout { grid-column: auto; }
+        .settings-profile > div, .settings-payment > div, .settings-security > div {
+          padding: 16px !important;
+        }
+      }
+      @media (max-width: 420px) {
+        .settings-profile .profile-detail-row {
+          align-items: flex-start !important;
+          flex-direction: column;
+          gap: 5px;
+        }
+        .settings-profile .profile-detail-value {
+          max-width: 100%;
+          text-align: left;
+          padding-left: 20px;
+        }
+        .demo-access-panel { padding: 11px !important; }
       }
       @media (min-width: 769px) {
         .mobile-header { display: none !important; }
@@ -371,15 +434,20 @@ function AuthScreen({ onLogin, toast, T }) {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "", phone: "" });
   const set = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
+  const demoAccount = { email: "xyz@payvault.com", password: "XYZ1234" };
 
   const submit = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       let data;
       if (mode === "login") {
         const body = new URLSearchParams({ username: form.email, password: form.password });
-        const res = await fetch(`${API}/auth/login`, { method: "POST", body, headers: { "Content-Type": "application/x-www-form-urlencoded" } });
-        if (!res.ok) { const e = await res.json(); throw new Error(e.detail); }
+        const res = await fetchWithTimeout(`${API}/auth/login`, { method: "POST", body, headers: { "Content-Type": "application/x-www-form-urlencoded" } });
+        if (!res.ok) {
+          const error = await res.json().catch(() => ({}));
+          throw new Error(error.detail || `Login failed (${res.status})`);
+        }
         data = await res.json();
       } else {
         data = await apiFetch("/auth/register", { method: "POST", body: JSON.stringify({ name: form.name, email: form.email, password: form.password, phone: form.phone }) });
@@ -422,15 +490,28 @@ function AuthScreen({ onLogin, toast, T }) {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {mode === "register" && <>
-              <Input T={T} label="Full Name" placeholder="Rohit Singh" value={form.name} onChange={set("name")} onKeyDown={e => e.key === "Enter" && submit()} />
-              <Input T={T} label="Phone" placeholder="+91 98765 43210" value={form.phone} onChange={set("phone")} onKeyDown={e => e.key === "Enter" && submit()} />
+              <Input T={T} label="Full Name" autoComplete="off" value={form.name} onChange={set("name")} onKeyDown={e => e.key === "Enter" && submit()} />
+              <Input T={T} label="Phone" autoComplete="off" value={form.phone} onChange={set("phone")} onKeyDown={e => e.key === "Enter" && submit()} />
             </>}
-            <Input T={T} label="Email Address" type="email" placeholder="rohit@payvault.com" value={form.email} onChange={set("email")} onKeyDown={e => e.key === "Enter" && submit()} />
-            <Input T={T} label="Password" type="password" placeholder="••••••••" value={form.password} onChange={set("password")} onKeyDown={e => e.key === "Enter" && submit()} />
+            <Input T={T} label="Email Address" type="email" autoComplete="off" value={form.email} onChange={set("email")} onKeyDown={e => e.key === "Enter" && submit()} />
+            <Input T={T} label="Password" type="password" autoComplete="off" value={form.password} onChange={set("password")} onKeyDown={e => e.key === "Enter" && submit()} />
             {mode === "login" && (
-              <div style={{ background: T.reviewCard, border: `1px solid ${T.reviewCardBorder}`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: T.textSub }}>
-                Demo — <strong style={{ color: T.text }}>rohit@payvault.com</strong> / <strong style={{ color: T.text }}>demo1234</strong>
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setForm(p => ({ ...p, email: demoAccount.email, password: demoAccount.password }));
+                  toast("XYZ demo account details filled. Select Sign In to continue.", "info");
+                }}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  gap: 8, width: "100%", padding: "11px 14px", borderRadius: 10,
+                  border: `1px solid ${T.reviewCardBorder}`, background: T.reviewCard,
+                  color: T.navActiveText, fontFamily: "inherit", fontSize: 13, fontWeight: 800,
+                  cursor: "pointer", textAlign: "center",
+                }}
+              >
+                <Wallet size={15} /> Use demo account
+              </button>
             )}
             <Btn T={T} variant="primary" loading={loading} style={{ width: "100%", justifyContent: "center", marginTop: 4 }} onClick={submit}>
               {mode === "login" ? "Sign In" : "Create Account"}
@@ -947,6 +1028,9 @@ export default function PayVault() {
 
   const categoryAnalytics = analytics ? Object.entries(analytics.by_category).sort((a, b) => b[1] - a[1]) : [];
   const pieGradient = analytics ? buildPieGradient(categoryAnalytics, analytics.total_spent) : "";
+  const quickSendContacts = ["alex@payvault", "sam@payvault", "maya@payvault"]
+    .map(upi => contacts.find(contact => String(contact.upi || "").toLowerCase() === upi))
+    .filter(Boolean);
 
   // Modals
   const [showSend, setShowSend] = useState(false);
@@ -980,7 +1064,11 @@ export default function PayVault() {
         apiFetch("/contacts", {}, token),
         apiFetch("/analytics", {}, token),
       ]);
-      setWallet(w); setTransactions(t); setContacts(c); setAnalytics(a);
+      const displayContacts = c.map(contact => {
+        const demoLabel = QUICK_SEND_DEMO_LABELS[String(contact.upi || "").toLowerCase()];
+        return demoLabel ? { ...contact, name: demoLabel.name, avatar: demoLabel.avatar } : contact;
+      });
+      setWallet(w); setTransactions(t); setContacts(displayContacts); setAnalytics(a);
     } catch (e) { toast(e.message, "error"); }
     finally { setLoading(false); }
   }, [token]);
@@ -1245,14 +1333,14 @@ export default function PayVault() {
                     <button onClick={() => setShowSend(true)} style={{ background: "none", border: "none", color: T.navActiveText, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>See all</button>
                   </div>
                   <div className="quick-send-scroll" style={{ display: "flex", gap: 20, overflowX: "auto", paddingBottom: 4 }}>
-                    {contacts.map(c => (
+                    {quickSendContacts.map(c => (
                       <div key={c.id} onClick={() => setShowSend(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", minWidth: 60, flexShrink: 0 }}>
                         <div style={{ width: 48, height: 48, borderRadius: 14, background: c.color + "20", border: `1px solid ${c.color}38`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: c.color, transition: "transform .2s" }}
                           onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.1)"; }}
                           onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}>
                           {c.avatar}
                         </div>
-                        <p style={{ fontSize: 11, color: T.muted, textAlign: "center", maxWidth: 60, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{c.name.split(" ")[0]}</p>
+                        <p style={{ fontSize: 11, color: T.muted, textAlign: "center", maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{c.name}</p>
                       </div>
                     ))}
                     <div onClick={() => setShowSend(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", minWidth: 60, flexShrink: 0 }}>
@@ -1495,61 +1583,69 @@ export default function PayVault() {
 
             {/* ══════════ SETTINGS ══════════ */}
             {page === "settings" && (
-              <div style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 16 }}>
+              <div className="settings-layout">
                 {/* Profile */}
-                <Card T={T} style={{ padding: 24 }}>
-                  <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, color: T.text, marginBottom: 20 }}>Profile</p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-                    <div style={{ width: 54, height: 54, borderRadius: 14, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800, color: "white", flexShrink: 0 }}>{user.avatar}</div>
-                    <div>
-                      <p style={{ fontWeight: 700, fontSize: 16, color: T.text, margin: 0 }}>{user.name}</p>
-                      <p style={{ fontSize: 13, color: T.muted, margin: 0 }}>{user.email}</p>
+                <div className="settings-profile">
+                  <Card T={T} style={{ padding: 24 }}>
+                    <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, color: T.text, marginBottom: 20 }}>Profile</p>
+                    <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+                      <div style={{ width: 54, height: 54, borderRadius: 14, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800, color: "white", flexShrink: 0 }}>{user.avatar}</div>
+                      <div className="profile-identity-copy">
+                        <p style={{ fontWeight: 700, fontSize: 16, color: T.text, margin: 0 }}>{user.name}</p>
+                        <p style={{ fontSize: 13, color: T.muted, margin: 0 }}>{user.email}</p>
+                      </div>
                     </div>
-                  </div>
-                  {[["UPI ID", wallet?.upi_id, Landmark], ["Phone", user.phone || "—", Phone], ["Member Since", user.joined, CalendarDays]].map(([label, val, Icon]) => (
-                    <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: `1px solid ${T.border}` }}>
-                      <span style={{ fontSize: 13, color: T.muted, display: "flex", alignItems: "center", gap: 7 }}><Icon size={13} />{label}</span>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{val}</span>
-                    </div>
-                  ))}
-                </Card>
+                    {[["UPI ID", wallet?.upi_id, Landmark], ["Phone", user.phone || "—", Phone], ["Member Since", user.joined, CalendarDays]].map(([label, val, Icon]) => (
+                      <div className="profile-detail-row" key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, padding: "12px 0", borderBottom: `1px solid ${T.border}` }}>
+                        <span style={{ fontSize: 13, color: T.muted, display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}><Icon size={13} />{label}</span>
+                        <span className="profile-detail-value" style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{val}</span>
+                      </div>
+                    ))}
+                  </Card>
+                </div>
 
                 {/* Payment Limit */}
-                <Card T={T} style={{ padding: 22 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                    <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: T.text, margin: 0 }}>Payment Limit</p>
-                    <Btn T={T} variant="warning" style={{ padding: "7px 14px", fontSize: 12 }} onClick={() => setShowLimitModal(true)}>
-                      <SlidersHorizontal size={13} /> Configure
-                    </Btn>
-                  </div>
-                  {paymentLimit > 0 ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, background: T.warningBg, border: `1px solid ${T.warningBorder}` }}>
-                      <TriangleAlert size={20} color={T.warningText} />
-                      <div>
-                        <p style={{ fontWeight: 700, color: T.warningText, margin: "0 0 3px" }}>Active Limit: {fmt(paymentLimit)}</p>
-                        <p style={{ fontSize: 12, color: T.textSub, margin: 0 }}>A warning will appear for any payment exceeding this amount.</p>
-                      </div>
+                <div className="settings-payment">
+                  <Card T={T} style={{ padding: 22, height: "100%" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                      <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: T.text, margin: 0 }}>Payment Limit</p>
+                      <Btn T={T} variant="warning" style={{ padding: "7px 14px", fontSize: 12, flexShrink: 0 }} onClick={() => setShowLimitModal(true)}>
+                        <SlidersHorizontal size={13} /> Configure
+                      </Btn>
                     </div>
-                  ) : (
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, background: T.statBg, border: `1px solid ${T.border}` }}>
-                      <Shield size={20} color={T.muted} />
-                      <div>
-                        <p style={{ fontWeight: 600, color: T.muted, margin: "0 0 3px" }}>No limit set</p>
-                        <p style={{ fontSize: 12, color: T.muted, margin: 0 }}>Configure a per-transaction limit to get warned on large payments.</p>
+                    {paymentLimit > 0 ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, background: T.warningBg, border: `1px solid ${T.warningBorder}` }}>
+                        <TriangleAlert size={20} color={T.warningText} style={{ flexShrink: 0 }} />
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ fontWeight: 700, color: T.warningText, margin: "0 0 3px" }}>Active Limit: {fmt(paymentLimit)}</p>
+                          <p style={{ fontSize: 12, color: T.textSub, margin: 0 }}>A warning will appear for any payment exceeding this amount.</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </Card>
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, background: T.statBg, border: `1px solid ${T.border}` }}>
+                        <Shield size={20} color={T.muted} style={{ flexShrink: 0 }} />
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ fontWeight: 600, color: T.muted, margin: "0 0 3px" }}>No limit set</p>
+                          <p style={{ fontSize: 12, color: T.muted, margin: 0 }}>Configure a per-transaction limit to get warned on large payments.</p>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                </div>
 
                 {/* Security toggles */}
-                <Card T={T} style={{ padding: 20 }}>
-                  <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: T.text, marginBottom: 16 }}>Security</p>
-                  <SecurityToggles T={T} />
-                </Card>
+                <div className="settings-security">
+                  <Card T={T} style={{ padding: 20, height: "100%" }}>
+                    <p style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: T.text, marginBottom: 16 }}>Security</p>
+                    <SecurityToggles T={T} />
+                  </Card>
+                </div>
 
-                <Btn T={T} variant="danger" style={{ width: "100%", justifyContent: "center" }} onClick={handleLogout}>
-                  <LogOut size={15} /> Sign Out of PayVault
-                </Btn>
+                <div className="settings-logout">
+                  <Btn T={T} variant="danger" style={{ width: "100%", justifyContent: "center" }} onClick={handleLogout}>
+                    <LogOut size={15} /> Sign Out of PayVault
+                  </Btn>
+                </div>
               </div>
             )}
 
