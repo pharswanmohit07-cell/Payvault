@@ -1028,6 +1028,9 @@ export default function PayVault() {
 
   const categoryAnalytics = analytics ? Object.entries(analytics.by_category).sort((a, b) => b[1] - a[1]) : [];
   const pieGradient = analytics ? buildPieGradient(categoryAnalytics, analytics.total_spent) : "";
+  const quickSendContacts = ["alex@payvault", "sam@payvault", "maya@payvault"]
+    .map(upi => contacts.find(contact => String(contact.upi || "").toLowerCase() === upi))
+    .filter(Boolean);
 
   // Modals
   const [showSend, setShowSend] = useState(false);
@@ -1061,7 +1064,11 @@ export default function PayVault() {
         apiFetch("/contacts", {}, token),
         apiFetch("/analytics", {}, token),
       ]);
-      setWallet(w); setTransactions(t); setContacts(c); setAnalytics(a);
+      const displayContacts = c.map(contact => {
+        const demoLabel = QUICK_SEND_DEMO_LABELS[String(contact.upi || "").toLowerCase()];
+        return demoLabel ? { ...contact, name: demoLabel.name, avatar: demoLabel.avatar } : contact;
+      });
+      setWallet(w); setTransactions(t); setContacts(displayContacts); setAnalytics(a);
     } catch (e) { toast(e.message, "error"); }
     finally { setLoading(false); }
   }, [token]);
@@ -1326,21 +1333,16 @@ export default function PayVault() {
                     <button onClick={() => setShowSend(true)} style={{ background: "none", border: "none", color: T.navActiveText, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>See all</button>
                   </div>
                   <div className="quick-send-scroll" style={{ display: "flex", gap: 20, overflowX: "auto", paddingBottom: 4 }}>
-                    {contacts
-                      .filter(c => QUICK_SEND_DEMO_LABELS[c.upi])
-                      .map(c => {
-                        const display = QUICK_SEND_DEMO_LABELS[c.upi];
-                        return (
-                          <div key={c.id} onClick={() => setShowSend(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", minWidth: 60, flexShrink: 0 }}>
-                            <div style={{ width: 48, height: 48, borderRadius: 14, background: c.color + "20", border: `1px solid ${c.color}38`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: c.color, transition: "transform .2s" }}
-                              onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.1)"; }}
-                              onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}>
-                              {display.avatar}
-                            </div>
-                            <p style={{ fontSize: 11, color: T.muted, textAlign: "center", maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{display.name}</p>
-                          </div>
-                        );
-                      })}
+                    {quickSendContacts.map(c => (
+                      <div key={c.id} onClick={() => setShowSend(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", minWidth: 60, flexShrink: 0 }}>
+                        <div style={{ width: 48, height: 48, borderRadius: 14, background: c.color + "20", border: `1px solid ${c.color}38`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: c.color, transition: "transform .2s" }}
+                          onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.1)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}>
+                          {c.avatar}
+                        </div>
+                        <p style={{ fontSize: 11, color: T.muted, textAlign: "center", maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{c.name}</p>
+                      </div>
+                    ))}
                     <div onClick={() => setShowSend(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", minWidth: 60, flexShrink: 0 }}>
                       <div style={{ width: 48, height: 48, borderRadius: 14, background: T.cardAccent, border: `1px dashed ${T.borderStrong}`, display: "flex", alignItems: "center", justifyContent: "center" }}><Plus size={18} color={T.muted} /></div>
                       <p style={{ fontSize: 11, color: T.muted, margin: 0 }}>New</p>
